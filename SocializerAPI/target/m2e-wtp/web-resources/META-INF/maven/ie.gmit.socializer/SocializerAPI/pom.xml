@@ -41,18 +41,24 @@
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet-core</artifactId>
-            <!-- use the following artifactId if you don't need servlet 2.x compatibility -->
-            <!-- artifactId>jersey-container-servlet</artifactId -->
         </dependency>
-        <!-- uncomment this to get JSON support
+        <!-- JSON Support -->
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-moxy</artifactId>
         </dependency>
-        -->
+        <!-- https://mvnrepository.com/artifact/com.datastax.cassandra/cassandra-driver-core -->
+        <!-- Cassandra Driver -->
+		<dependency>
+    		<groupId>com.datastax.cassandra</groupId>
+    		<artifactId>cassandra-driver-core</artifactId>
+    		<version>3.1.1</version>
+		</dependency>  
     </dependencies>
+    
     <properties>
         <jersey.version>2.23</jersey.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    
 </project>
