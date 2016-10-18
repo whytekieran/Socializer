@@ -1,58 +1,77 @@
 package ie.gmit.socializer.SocializerAPI.models;
 
-import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+
+//import com.datastax.driver.core.TimestampGenerator;
+import com.datastax.driver.core.utils.UUIDs;
 
 public class User {
 
 	//Instance variables
-	private String uuid;
+	private UUIDs uuid;
 	private String email;
 	private String password_hash;
 	private String hash_secret;
-	private String firstName;
+	private String firstname;
 	private String surname;
 	private String slug;
 	private Date dob;
-	private String phoneNumber;
+	private String phone_number;
 	private String address1;
 	private String address2;
-	private String addressCity;
-	private String addressCounty;
-	private String addressCountry;
-	private String addressJson;
+	private String address_city;
+	private String address_county;
+	private String address_country;
 	private String profilePicUuid;
 	private String backgroundPicUuid;
 	private List<String> workplaces;
 	private List<String> professionalSkills;
 	private List<String> livedIn;
 	private List<String> connections;
-	private Timestamp created;//java.sql  
-	private Timestamp updated;
+	private long created;    //hold long time stamps when user is created and updated
+	//private long updated;	//used to hold value when user updated his/her details
+	private DateFormat dateFormat;	//Used to format string 'dob' into a valid date format
+	//private Timeline userTL; //User has a Timeline
 	
+	//Empty constructor needed if we are returning JSON or XML responses
+	//Important for XML or JSON conversion
+	//Jersey framework needs to be able to create a new instance of the class hence the empty constructor
+	public User()
+	{
+		
+	}
+		
 	//Constructor ...could maybe add more? Multiple overloaded constructors?
-	public User(String email, String firstName, String surname, Date dob, String phoneNumber, 
-			    String address1, String address2, String addressCity, 
-			    String addressCounty, String addressCountry) {
-		super();
+	public User(String email, String firstname, String surname, String dob, String phone_number, 
+			    String address1, String address2, String address_city, 
+			    String address_county, String address_country) {
+		
+		dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 		this.email = email;
-		this.firstName = firstName;
+		this.firstname = firstname;
 		this.surname = surname;
-		this.dob = dob;
-		this.phoneNumber = phoneNumber;
 		this.address1 = address1;
 		this.address2 = address2;
-		this.addressCity = addressCity;
-		this.addressCounty = addressCounty;
-		this.addressCountry = addressCountry;
+		this.address_city = address_city;
+		this.address_county = address_county;
+		this.address_country = address_country;
+		this.phone_number = phone_number;
+		try {
+			this.dob = dateFormat.parse(dob);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 	}
-
+	
 	//Getters and Setters
-	public String getUuid() {
+	public UUIDs getUuid() {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) {
+	public void setUuid(UUIDs uuid) {
 		this.uuid = uuid;
 	}
 
@@ -81,11 +100,11 @@ public class User {
 	}
 
 	public String getFirstName() {
-		return firstName;
+		return firstname;
 	}
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
+	public void setFirstName(String firstname) {
+		this.firstname = firstname;
 	}
 
 	public String getSurname() {
@@ -113,11 +132,19 @@ public class User {
 	}
 
 	public String getPhoneNumber() {
-		return phoneNumber;
+		return phone_number;
 	}
 
-	public void setPhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
+	public void setPhoneNumber(String phone_number) {
+		this.phone_number = phone_number;
+	}
+
+	public String getFirstname() {
+		return firstname;
+	}
+
+	public void setFirstname(String firstname) {
+		this.firstname = firstname;
 	}
 
 	public String getAddress1() {
@@ -137,35 +164,27 @@ public class User {
 	}
 
 	public String getAddressCity() {
-		return addressCity;
+		return address_city;
 	}
 
 	public void setAddressCity(String addressCity) {
-		this.addressCity = addressCity;
+		this.address_city = addressCity;
 	}
 
 	public String getAddressCounty() {
-		return addressCounty;
+		return address_county;
 	}
 
 	public void setAddressCounty(String addressCounty) {
-		this.addressCounty = addressCounty;
+		this.address_county = addressCounty;
 	}
 
 	public String getAddressCountry() {
-		return addressCountry;
+		return address_country;
 	}
 
 	public void setAddressCountry(String addressCountry) {
-		this.addressCountry = addressCountry;
-	}
-
-	public String getAddressJson() {
-		return addressJson;
-	}
-
-	public void setAddressJson(String addressJson) {
-		this.addressJson = addressJson;
+		this.address_country = addressCountry;
 	}
 
 	public String getProfilePicUuid() {
@@ -211,24 +230,16 @@ public class User {
 	public List<String> getConnections() {
 		return connections;
 	}
-
-	public void setConnections(List<String> connections) {
-		this.connections = connections;
-	}
-
-	public Timestamp getCreated() {
+	
+	public long getCreated() {
 		return created;
 	}
 
-	public void setCreated(Timestamp created) {
+	public void setCreated(long created) {
 		this.created = created;
 	}
 
-	public Timestamp getUpdated() {
-		return updated;
-	}
-
-	public void setUpdated(Timestamp updated) {
-		this.updated = updated;
+	public void setConnections(List<String> connections) {
+		this.connections = connections;
 	}
 }
