@@ -24,22 +24,25 @@
 package ie.gmit.socializer.services.chat.server.model;
 
 import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.driver.mapping.annotations.ClusteringColumn;
+import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 @Table(keyspace = "app_user_data", name = "message_session",
-       readConsistency = "QUORUM",
-       writeConsistency = "QUORUM",
        caseSensitiveKeyspace = false,
        caseSensitiveTable = false)
 public class MessageSessionModel implements Modelable{
+    @PartitionKey
     private UUID msession_uuid;
     private List<UUID> user_uuid_list;
     private String name;
     private int permission;
-    private long created;
-    private long updated;
+    @ClusteringColumn
+    private Date created;
+    private Date updated;
 
     public MessageSessionModel() {}
 
@@ -69,8 +72,8 @@ public class MessageSessionModel implements Modelable{
         this.user_uuid_list = user_uuid_list;
         this.name = name;
         this.permission = permission;
-        this.created = created;
-        this.updated = updated;
+        this.created = new Date(created);
+        this.updated = new Date(updated);
     }
     
     
@@ -113,11 +116,11 @@ public class MessageSessionModel implements Modelable{
         this.permission = permission;
     }
 
-    public long getCreated() {
+    public Date getCreated() {
         return created;
     }
 
-    public void setCreated(long created) {
+    public void setCreated(Date created) {
         this.created = created;
     }
 
@@ -125,14 +128,14 @@ public class MessageSessionModel implements Modelable{
      * Generate current timestamp
      */
     public void setCreated() {
-        this.created = System.currentTimeMillis();
+        this.created = new Date(System.currentTimeMillis());
     }
     
-    public long getUpdated() {
+    public Date getUpdated() {
         return updated;
     }
 
-    public void setUpdated(long updated) {
+    public void setUpdated(Date updated) {
         this.updated = updated;
     }
     
@@ -140,6 +143,6 @@ public class MessageSessionModel implements Modelable{
      * Generate current timestamp
      */
     public void setUpdated() {
-        this.updated = System.currentTimeMillis();
+        this.updated = new Date(System.currentTimeMillis());
     }
 }

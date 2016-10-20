@@ -94,16 +94,9 @@ public class MessageModelMapperTest {
     public void test_002CreateEntry() {
         System.out.println("createEntry");
         MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
-        Exception exc = null;
+        boolean result = instance.createEntry(mm1); 
 
-        try {
-            instance.createEntry(mm1);
-        } catch (Exception e) {
-            exc = e;
-            System.out.println(e);
-        }
-
-        assertEquals(true, null == exc);
+        assertEquals(true, result);
     }
 
     /**
@@ -185,16 +178,9 @@ public class MessageModelMapperTest {
     public void test_007DeleteEntry() {
         System.out.println("deleteEntry");
         MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
-        Exception exc = null;
-
-        try {
-            instance.deleteEntry(mm1.getMessage_uuid());
-        } catch (Exception e) {
-            exc = e;
-            System.out.println(e);
-        }
-
-        assertEquals(true, null == exc);
+        boolean result = instance.deleteEntry(mm1.getMessage_uuid());
+        
+        assertEquals(true, result);
 
     }
     

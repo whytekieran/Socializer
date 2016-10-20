@@ -23,20 +23,17 @@
  */
 package ie.gmit.socializer.services.chat.server.model;
 
+import com.datastax.driver.core.BoundStatement;
 import java.util.List;
 import java.util.UUID;
 
-/**
- *
- * @author pete
- */
-public interface Mapable {
+public interface Mapable{
 
     /**
      * Create single entry in database
      * @param modelable
      */
-    public void createEntry(Modelable modelable);
+    public boolean createEntry(Modelable modelable);
 
     /**
      * Create single entry in database async
@@ -45,25 +42,40 @@ public interface Mapable {
     public void createEntryAsync(Modelable modelable);
 
     /**
+     * Generate bound statement for delete
+     * @param entryUUID
+     * @return 
+     */
+    public BoundStatement getDeleteBoundStatement(UUID entryUUID);
+    /**
      * Delete entry by uuid
      * @param entryUUID
      */
-    public void deleteEntry(UUID entryUUID);
+    public boolean deleteEntry(UUID entryUUID);
     
     /**
      * Delete entry by uuid
      * @param entryUUID
      */
-    public void deleteEntryAsync(UUID entryUUID);
+    public boolean deleteEntryAsync(UUID entryUUID);
+    
+    /**
+     * Delete multiple entries
+     * @param entryUUIDs
+     * @param keyColumnName 
+     */
+    public boolean deleteEntries(List<UUID> entryUUIDs, String keyColumnName);
 
     /**
      * Execute single query
      * @param query
      */
-    public void executeQuery(String query);
+    public boolean executeQuery(String query);
 
     /**
      * Update single entry
+     * 
+     * Note: Method could throw an exception for invalid update or closed connection
      * @param modelable
      */
     public void updateEntry(Modelable modelable);
@@ -71,8 +83,9 @@ public interface Mapable {
     /**
      * Get single entry
      * @param entryUUID
+     * @return Modelable or null
      */
     public Modelable getEntry(UUID entryUUID);
     
-    public void deleteEntries(List<UUID> entryUUIDs, String keyColumnName);
+    
 }
