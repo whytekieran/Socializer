@@ -23,27 +23,57 @@
  */
 package ie.gmit.socializer.services.chat.server.model;
 
+import com.datastax.driver.core.TimestampGenerator;
 import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.driver.mapping.annotations.ClusteringColumn;
+import com.datastax.driver.mapping.annotations.PartitionKey;
+import com.datastax.driver.mapping.annotations.Table;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
-
-public class MessageModel{
+@Table(keyspace = "app_user_data", name = "message",
+       caseSensitiveKeyspace = false,
+       caseSensitiveTable = false)
+public class MessageModel implements Modelable{
+    @PartitionKey(0)
     private UUID message_uuid;
     private UUID msession_uuid;
+    private UUID user_uuid;
     private String content;
     private int content_type;
-    private long created;
-    private long updated;
+    @PartitionKey(1)
+    private Date created;
+    private Date updated;
 
     public MessageModel() {}
 
-    public MessageModel(UUID message_uuid, UUID msession_uuid, String content, int content_type, long created, long updated) {
+    public MessageModel(UUID message_uuid, UUID msession_uuid, UUID user_uuid, String content, int content_type, long created, long updated) {
         this.message_uuid = message_uuid;
         this.msession_uuid = msession_uuid;
+        this.user_uuid = user_uuid;
         this.content = content;
         this.content_type = content_type;
-        this.created = created;
-        this.updated = updated;
+        this.created = new Date(created);
+        this.updated = new Date(updated);
+    }
+
+    /**
+     * Constructor for new instance with auto generated fields 
+     * @param msession_uuid
+     * @param user_uuid
+     * @param content
+     * @param content_type 
+     */
+    public MessageModel(UUID msession_uuid, UUID user_uuid, String content, int content_type) {
+        this.msession_uuid = msession_uuid;
+        this.user_uuid = user_uuid;
+        this.content = content;
+        this.content_type = content_type;
+        message_uuid = UUIDs.random();
+        created = new Date();
+        updated = new Date();
     }
     
     public UUID getMessage_uuid() {
@@ -92,11 +122,11 @@ public class MessageModel{
         this.content_type = content_type;
     }
 
-    public long getCreated() {
+    public Date getCreated() {
         return created;
     }
 
-    public void setCreated(long created) {
+    public void setCreated(Timestamp created) {
         this.created = created;
     }
 
@@ -104,17 +134,24 @@ public class MessageModel{
      * Generate new uuid and set
      */
     public void setCreated() {
-        this.created = System.currentTimeMillis();
+        this.created = Timestamp.valueOf(LocalDateTime.MIN);
     }
 
-    public long getUpdated() {
+    public Date getUpdated() {
         return updated;
     }
 
     public void setUpdated() {
-        this.updated = System.currentTimeMillis();
+        this.updated = Timestamp.valueOf(LocalDateTime.MIN);
     }
-    
+
+    public UUID getUser_uuid() {
+        return user_uuid;
+    }
+
+    public void setUser_uuid(UUID user_uuid) {
+        this.user_uuid = user_uuid;
+    }
     
     
 }

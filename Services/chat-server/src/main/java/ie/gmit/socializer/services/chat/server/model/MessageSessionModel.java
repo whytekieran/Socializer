@@ -24,10 +24,16 @@
 package ie.gmit.socializer.services.chat.server.model;
 
 import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.driver.mapping.annotations.Table;
 import java.util.List;
 import java.util.UUID;
 
-public class MessageSessionModel {
+@Table(keyspace = "app_user_data", name = "message_session",
+       readConsistency = "QUORUM",
+       writeConsistency = "QUORUM",
+       caseSensitiveKeyspace = false,
+       caseSensitiveTable = false)
+public class MessageSessionModel implements Modelable{
     private UUID msession_uuid;
     private List<UUID> user_uuid_list;
     private String name;
@@ -66,6 +72,7 @@ public class MessageSessionModel {
         this.created = created;
         this.updated = updated;
     }
+    
     
     public UUID getMsession_uuid() {
         return msession_uuid;
