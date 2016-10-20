@@ -22,7 +22,7 @@
  * Database
  * @package ie.gmit.socializer.services.chat.server.model
  */
-package ie.gmit.socializer.services.chat.server.model;
+package ie.gmit.socializer.services.chat.model;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;

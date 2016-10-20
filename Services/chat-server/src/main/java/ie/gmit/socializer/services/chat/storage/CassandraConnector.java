@@ -21,7 +21,7 @@
  * @description CassandraConnector - Handles cassandra connection based on Datastax driver
  * @package ie.gmit.socializer.services.chat.server.storage
  */
-package ie.gmit.socializer.services.chat.server.storage;
+package ie.gmit.socializer.services.chat.storage;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.HostDistance;

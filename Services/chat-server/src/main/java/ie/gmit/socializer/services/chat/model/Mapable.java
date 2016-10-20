@@ -21,7 +21,7 @@
  * @description NewInterface - Interface for classes that handle database (Cassandra) ORM
  * @package ie.gmit.socializer.services.chat.server.model
  */
-package ie.gmit.socializer.services.chat.server.model;
+package ie.gmit.socializer.services.chat.model;
 
 import com.datastax.driver.core.BoundStatement;
 import java.util.List;

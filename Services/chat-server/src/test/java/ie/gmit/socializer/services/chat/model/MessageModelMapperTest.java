@@ -21,14 +21,16 @@
  * @description MessageModelMapperTest - Test cases for message model
  * @package ie.gmit.socializer.services.chat.server.model
  */
-package ie.gmit.socializer.services.chat.server.model;
+package ie.gmit.socializer.services.chat.model;
 
+import ie.gmit.socializer.services.chat.model.MessageModelMapper;
+import ie.gmit.socializer.services.chat.model.MessageModel;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.Result;
-import ie.gmit.socializer.services.chat.server.storage.CassandraConnector;
+import ie.gmit.socializer.services.chat.storage.CassandraConnector;
 import java.util.Arrays;
 import java.util.UUID;
 import org.junit.Before;

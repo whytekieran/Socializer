@@ -21,7 +21,7 @@
  * @description MessageSessionModel - Holds the object for message_session table
  * @package ie.gmit.socializer.services.chat.server.model
  */
-package ie.gmit.socializer.services.chat.server.model;
+package ie.gmit.socializer.services.chat.model;
 
 import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.annotations.ClusteringColumn;

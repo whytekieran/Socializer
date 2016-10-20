@@ -21,7 +21,7 @@
  * @description NewInterface - Placeholder interface for models
  * @package ie.gmit.socializer.services.chat.server.model
  */
-package ie.gmit.socializer.services.chat.server.model;
+package ie.gmit.socializer.services.chat.model;
 
 public interface Modelable {
 }
