@@ -18,13 +18,12 @@
  * @author Peter Nagy - peternagy.ie
  * @since October 2016
  * @version 0.1
- * @description NewInterface - Short description
+ * @description NewInterface - Interface for classes that handle database (Cassandra) ORM
  * @package ie.gmit.socializer.services.chat.server.model
  */
 package ie.gmit.socializer.services.chat.server.model;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.mapping.Result;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -37,49 +36,43 @@ public interface Mapable {
      * Create single entry in database
      * @param modelable
      */
-    void createEntry(Modelable modelable);
+    public void createEntry(Modelable modelable);
 
     /**
      * Create single entry in database async
      * @param modelable
      */
-    void createEntryAsync(Modelable modelable);
+    public void createEntryAsync(Modelable modelable);
 
     /**
      * Delete entry by uuid
      * @param entryUUID
      */
-    void deleteEntry(UUID entryUUID);
+    public void deleteEntry(UUID entryUUID);
     
     /**
      * Delete entry by uuid
      * @param entryUUID
      */
-    void deleteEntryAsync(UUID entryUUID);
+    public void deleteEntryAsync(UUID entryUUID);
 
     /**
      * Execute single query
      * @param query
      */
-    void executeQuery(String query);
-
-    /**
-     * Get multiple entries by executing a select statement
-     *
-     * @param query
-     * @return
-     */
-    Result<MessageModel> getMultiple(BoundStatement bound);
+    public void executeQuery(String query);
 
     /**
      * Update single entry
      * @param modelable
      */
-    void updateEntry(Modelable modelable);
+    public void updateEntry(Modelable modelable);
     
     /**
      * Get single entry
      * @param entryUUID
      */
-    Modelable getEntry(UUID entryUUID);
+    public Modelable getEntry(UUID entryUUID);
+    
+    public void deleteEntries(List<UUID> entryUUIDs, String keyColumnName);
 }

@@ -18,7 +18,7 @@
  * @author Peter Nagy - peternagy.ie
  * @since October 2016
  * @version 0.1
- * @description MessageModelMapper - Short description
+ * @description MessageModelMapper - ORM class for message model -> Cassandra Database
  * @package ie.gmit.socializer.services.chat.server.model
  */
 package ie.gmit.socializer.services.chat.server.model;
@@ -30,10 +30,10 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.driver.mapping.Result;
+import java.util.List;
 import java.util.UUID;
 
 public class MessageModelMapper implements Mapable{
-    
     protected Mapper<MessageModel> mapper;
     protected Session session;
     protected MappingManager mappingManager;
@@ -55,7 +55,6 @@ public class MessageModelMapper implements Mapable{
      * Create single entry in database
      * @param modelable 
      */
-    @Override
     public void createEntry(Modelable modelable){
         mapper.save((MessageModel)modelable);
     }
@@ -64,7 +63,6 @@ public class MessageModelMapper implements Mapable{
      * Create single entry in database async
      * @param modelable 
      */
-    @Override
     public void createEntryAsync(Modelable modelable){
         mapper.saveAsync((MessageModel)modelable);
     }
@@ -72,7 +70,6 @@ public class MessageModelMapper implements Mapable{
      * Update single entry
      * @param modelable 
      */
-    @Override
     public void updateEntry(Modelable modelable){
         mapper.saveAsync((MessageModel)modelable);
     }
@@ -80,10 +77,9 @@ public class MessageModelMapper implements Mapable{
     /**
      * Get multiple entries by executing a select statement 
      * 
-     * @param query
+     * @param bound - the statement to execute
      * @return 
      */
-    @Override
     public Result<MessageModel> getMultiple(BoundStatement bound){
         ResultSet results = session.execute(bound);
         return mapper.map(results);
@@ -93,7 +89,6 @@ public class MessageModelMapper implements Mapable{
      * Delete entry async by uudi
      * @param entryUUID 
      */
-    @Override
     public void deleteEntryAsync(UUID entryUUID){
         mapper.deleteAsync(entryUUID);
     }
@@ -102,38 +97,59 @@ public class MessageModelMapper implements Mapable{
      * Delete entry async by uuid
      * @param entryUUID 
      */
-    @Override
     public void deleteEntry(UUID entryUUID){
-        mapper.delete(entryUUID);
+        PreparedStatement prepared = session.prepare(
+                            String.format("delete from %s.message where message_uuid = ?", KEY_SPACE)
+                              );
+        BoundStatement bound = prepared.bind(entryUUID);
+        session.execute(bound);
+    }
+    
+    /**
+     * Delete multiple entries by key column name and id list
+     * 
+     * @param entryUUIDs - the list of uuid's to delete with
+     * @param keyColumnName - the index column to deal with
+     */
+    public void deleteEntries(List<UUID> entryUUIDs, String keyColumnName){
+        PreparedStatement prepared = session.prepare(
+                            String.format("delete from %s.message where %s in ?", KEY_SPACE,  keyColumnName)
+                              );
+        BoundStatement bound = prepared.bind(entryUUIDs);
+        session.execute(bound);
     }
     
     /**
      * Execute single query
      * @param query 
      */
-    @Override
     public void executeQuery(String query){
         session.execute(query);
     }
     
     /**
      * Get single entry
+     * 
      * @param entryUUID
      * @return 
      */
-    public MessageModel getEntry(UUID entryUUID){
+    public Modelable getEntry(UUID entryUUID){
         PreparedStatement prepared = session.prepare(
                             String.format("select * from %s.message where message_uuid = ?", KEY_SPACE)
                               );
         BoundStatement bound = prepared.bind(entryUUID);
         ResultSet results = session.execute(bound);
         
-        System.out.println("Query: " + String.format("select * from %s.message where message_uuid = " + entryUUID.toString(), KEY_SPACE) + "\n Results" + results.toString());
-        
         return mapper.map(results).one();
     }
     
-    public MessageModel getEntry(MessageModel item){
+    /**
+     * Get message by object
+     * 
+     * @param item the object to find
+     * @return MessageModel or null
+     */
+    public Modelable getEntry(MessageModel item){
         return getEntry(item.getMessage_uuid());
     }
     

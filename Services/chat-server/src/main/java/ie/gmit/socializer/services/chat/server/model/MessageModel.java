@@ -23,7 +23,6 @@
  */
 package ie.gmit.socializer.services.chat.server.model;
 
-import com.datastax.driver.core.TimestampGenerator;
 import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.annotations.ClusteringColumn;
 import com.datastax.driver.mapping.annotations.PartitionKey;
@@ -43,7 +42,7 @@ public class MessageModel implements Modelable{
     private UUID user_uuid;
     private String content;
     private int content_type;
-    @PartitionKey(1)
+    @ClusteringColumn
     private Date created;
     private Date updated;
 
@@ -126,7 +125,7 @@ public class MessageModel implements Modelable{
         return created;
     }
 
-    public void setCreated(Timestamp created) {
+    public void setCreated(Date created) {
         this.created = created;
     }
 
