@@ -32,13 +32,12 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 
 public class ServerRunner extends ServerConfigurator {
-    
-    
     protected static boolean isVerbose = false;
     protected static Options availableOptions;
     
     /**
      * Cli entry point 
+     * 
      * @param args - cli parameters
      */
     public static void main(String[] args){
@@ -53,6 +52,11 @@ public class ServerRunner extends ServerConfigurator {
         }
     }
     
+    /**
+     * Parse the input parameters from star-in string 
+     * @param args - Cli arguments
+     * @return Server object
+     */
     protected static Object tryParseCliInput(String[] args){
         buildCliOptions();
         try {
