@@ -30,6 +30,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.java_websocket.server.WebSocketServer;
 
 public class ServerRunner extends ServerConfigurator {
     protected static boolean isVerbose = false;
@@ -42,14 +43,18 @@ public class ServerRunner extends ServerConfigurator {
      */
     public static void main(String[] args){
         long startTime = System.currentTimeMillis();
+        WebSocketServer server = null;
+        CommandLine cli = tryParseCliInput(args);
+        if(cli != null)
+            server = configureServer(cli);
         
-        Object o = tryParseCliInput(args);
-        if(o != null)
-            //add the server execution here
+        if(server != null)
+            server.run();
+        else
+            printCliHelp("Could not parse paramater values, please check values");
         
-        if (isVerbose) {
+        if (isVerbose)
             System.out.printf("\n Process finished in %dms\n\n", System.currentTimeMillis() - startTime);
-        }
     }
     
     /**
@@ -57,33 +62,33 @@ public class ServerRunner extends ServerConfigurator {
      * @param args - Cli arguments
      * @return Server object
      */
-    protected static Object tryParseCliInput(String[] args){
+    protected static CommandLine tryParseCliInput(String[] args){
         buildCliOptions();
         try {
             CommandLineParser parser = new DefaultParser();
-            CommandLine line = parser.parse(availableOptions, args);
-            isVerbose = line.hasOption('v');
+            CommandLine cli = parser.parse(availableOptions, args);
+            isVerbose = cli.hasOption('v');
 
-            return routeParams(line);
-            
+            return cli;
         } catch (org.apache.commons.cli.ParseException ex) {
-            printCliHelp();
+            printCliHelp("");
             //@todo: override the logger if not in debug mode
             Logger.getLogger(ServerConfigurator.class.getName()).log(Level.SEVERE, "Server configurator commandline pars error - tryParseCliInput", ex);
         }
-        //Force quit as the server could not been initialized
+        
         return null;
     }
     
     /**
-     * Build the command-line options for service
+     * Build the command-cli options for service
      */
     protected static void buildCliOptions() {
         availableOptions = new Options();
-        availableOptions.addOption("b", "banchmark", false, "Run a banchmark test on implementation simulating client");
+        availableOptions.addOption("b", "benchmark", false, "Run a benchmark test on implementation simulating client");
         availableOptions.addOption("d", "debug", false, "Run the service in debug mode, will output all information on screen instead log file");
         availableOptions.addOption("h", "help", false, "Show help options (this menu)");
         availableOptions.addOption("i", "ip-address", true, "The service ip address or hostname");
+        availableOptions.addOption("l", "log-path", true, "The path for for storing logs");
         availableOptions.addOption("p", "port", true, "The port the service should listen on");
         availableOptions.addOption("s", "socket-type", true, "The type of socket to user (WS or WSS)");
         availableOptions.addOption("v", "verbose", false, "Show details of the process, outputs connection information");
@@ -91,10 +96,14 @@ public class ServerRunner extends ServerConfigurator {
 
     /**
      * Print the cli help with options and exit
+     * @param errorMessage - Any additional messages to display before help
      */
-    protected static void printCliHelp() {
+    protected static void printCliHelp(final String errorMessage) {
+        if(errorMessage.length() > 0)
+            System.out.println(errorMessage);//show an extra message before help
+        
         String helpHeader = "Socializer chat server cli options\n=======================================";
-        String helpFooter = new StringBuilder("\nExamples:\n=======================================").append("\nRun service: -i 127.0.0.1 -p 81 -s ws").append("\nRun in debug mode service: -i 127.0.0.1 -p 81 -s ws -d").append("\nRun in verbose mode service: -i 127.0.0.1 -p 81 -s ws -v").append("\nRun benchmark test: -i 127.0.0.1 -p 81 -s ws -b").append("\n=======================================\n\n").toString();
+        String helpFooter = "\nExamples:\n=======================================\nRun service: -i 127.0.0.1 -p 81 -s ws\nRun in debug mode service: -i 127.0.0.1 -p 81 -s ws -d\nRun in verbose mode service: -i 127.0.0.1 -p 81 -s ws -v\nRun benchmark test: -i 127.0.0.1 -p 81 -s ws -b\n=======================================\n\n";
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp("Socializer chat server", helpHeader, availableOptions, helpFooter, true);
     }
