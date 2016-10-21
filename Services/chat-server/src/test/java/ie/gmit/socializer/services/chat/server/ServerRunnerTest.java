@@ -89,7 +89,7 @@ public class ServerRunnerTest {
     @Test
     public void test_004TryParsePort() {
         System.out.println("tryParsePort");
-        boolean result = ServerRunner.tryParsePort("80");
+        boolean result = ServerConfigurator.tryParsePort("80");
         
         assertEquals(true, result);
     }
@@ -100,7 +100,7 @@ public class ServerRunnerTest {
     @Test
     public void test_005TryParsePort() {
         System.out.println("tryParsePort inverse");
-        boolean result = ServerRunner.tryParsePort("82");
+        boolean result = ServerConfigurator.tryParsePort("82");
         
         assertEquals(false, result);
     }
@@ -111,7 +111,7 @@ public class ServerRunnerTest {
     @Test
     public void test_006TryParseHostname() {
         System.out.println("tryParseHostname");
-        boolean result = ServerRunner.tryParseHostname("127.0.0.1");
+        boolean result = ServerConfigurator.tryParseHostname("127.0.0.1");
         
         assertEquals(true, result);
     }
@@ -122,7 +122,7 @@ public class ServerRunnerTest {
     @Test
     public void test_007TryParseHostname() {
         System.out.println("tryParseHostname inverse");
-        boolean result = ServerRunner.tryParseHostname("127.0.0");
+        boolean result = ServerConfigurator.tryParseHostname("127.0.0");
         
         assertEquals(false, result);
     }
@@ -135,7 +135,7 @@ public class ServerRunnerTest {
         System.out.println("ConfigureServer");
         String[] args = new String[]{"-i", "127.0.0.1", "-p", "80", "-s", "wss"};
         CommandLine result = ServerRunner.tryParseCliInput(args);
-        WebSocketServer server = ServerRunner.configureServer(result);
+        WebSocketServer server = ServerConfigurator.configureServer(result);
         
         assertEquals(true, null != server);
     }
@@ -148,7 +148,7 @@ public class ServerRunnerTest {
         System.out.println("ConfigureServer");
         String[] args = new String[]{"-i", "127.0.0.1"};
         CommandLine result = ServerRunner.tryParseCliInput(args);
-        WebSocketServer server = ServerRunner.configureServer(result);
+        WebSocketServer server = ServerConfigurator.configureServer(result);
         
         assertEquals(true, null == server);
     }

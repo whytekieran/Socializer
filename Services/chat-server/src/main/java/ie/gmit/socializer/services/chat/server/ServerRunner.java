@@ -32,7 +32,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.java_websocket.server.WebSocketServer;
 
-public class ServerRunner extends ServerConfigurator {
+public class ServerRunner {
     protected static boolean isVerbose = false;
     protected static Options availableOptions;
     
@@ -46,7 +46,7 @@ public class ServerRunner extends ServerConfigurator {
         WebSocketServer server = null;
         CommandLine cli = tryParseCliInput(args);
         if(cli != null)
-            server = configureServer(cli);
+            server = ServerConfigurator.configureServer(cli);
         
         if(server != null)
             server.run();

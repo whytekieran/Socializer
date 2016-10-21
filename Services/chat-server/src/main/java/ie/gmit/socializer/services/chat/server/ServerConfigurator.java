@@ -24,80 +24,184 @@
 package ie.gmit.socializer.services.chat.server;
 
 import com.google.common.net.InetAddresses;
+import java.io.File;
 import java.net.InetSocketAddress;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import org.apache.commons.cli.CommandLine;
 import org.java_websocket.server.WebSocketServer;
 
 public class ServerConfigurator {
-    
+
+    protected static final String DEFAULT_LOG_PATH = "/logs";
+    protected static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     /**
-     * Route the command line parameters to server objects 
+     * Route the command line parameters to server objects
+     *
      * @todo: Implement benchmark server
      * @todo: Implement keyring management and generation for wss support
-     * 
+     *
      * @param cli - Initialized CommandLine object with current parameters
      */
     protected static WebSocketServer configureServer(final CommandLine cli) {
+        configureServerLogging(cli);
+        
         if (cli.hasOption('b')) {
             //prepare benchmark server configuration
             //run benchmark
             //Exit after benchmark
             return null;
-        }else if(cli.hasOption('i') && tryParseHostname(cli.getOptionValue('i')) 
-                    && cli.hasOption('p') && tryParsePort(cli.getOptionValue('p'))){
+        } else if (cli.hasOption('i') && tryParseHostname(cli.getOptionValue('i'))
+                && cli.hasOption('p') && tryParsePort(cli.getOptionValue('p'))) {
             //Check protocol params
-            if(cli.hasOption('s') 
-                    && cli.getOptionValue('s').equalsIgnoreCase("ws") || cli.getOptionValue('s').equalsIgnoreCase("wss")){
+            if (cli.hasOption('s')
+                    && cli.getOptionValue('s').equalsIgnoreCase("ws") || cli.getOptionValue('s').equalsIgnoreCase("wss")) {
                 //start with specified socket type
                 //@todo: this has to implement server side keyring management (use keytool)
-            }else{
+            } else {
                 //normal run
             }
             return new CryptoSocketServer(
-                            new InetSocketAddress(cli.getOptionValue('i'), Integer.parseInt(cli.getOptionValue('p')))
-                            , cli.hasOption('d'), cli.hasOption('v'));
+                    new InetSocketAddress(cli.getOptionValue('i'), Integer.parseInt(cli.getOptionValue('p'))), cli.hasOption('d'), cli.hasOption('v'));
         }
-        
+
         return null;
     }
     
     /**
-     * Try parse port with validation
+     * Configure the logging for current execution
      * 
-     * @param number
-     * @return 
+     * @param cli - the parsed command line parameters 
      */
-    protected static boolean tryParsePort(String number){
-        try{
-            int num = Integer.parseInt(number);
-            if(num == 80 || num == 443 
-                    || (num > 1000 && num < 65535))
-                return true;
-        }catch(Exception e){
-            //Not a number no way to resolve
+    protected static void configureServerLogging(final CommandLine cli){
+        String logPath = cli.hasOption('l') ? cli.getOptionValue('l') : "";
+        setupLoging(logPath, cli.hasOption('v'), cli.hasOption('d'));
+    }
+
+    /**
+     * Setup logger for logging on default
+     *
+     * @param logPath - valid path string or ""
+     * @param isVerbose - if true output to console (screen)
+     * @param isDebug - dump all info to the screen, nothing will be loggen in file
+     */
+    protected static void setupLoging(String logPath, boolean isVerbose, boolean isDebug) {
+        if (!isDebug) {//save to file
+            if (!isVerbose) {//don't print on screen
+                Logger rootLogger = Logger.getLogger("");
+                Handler[] handlers = rootLogger.getHandlers();
+
+                for (Handler h : handlers) {
+                    //Remove the general log handler
+                    if (h instanceof ConsoleHandler) {
+                        rootLogger.removeHandler(h);
+                        break;
+                    }
+                }
+            }
+            
+            //Format and handle file based loggin
+            SimpleDateFormat format = new SimpleDateFormat("M-d_HHmmss");
+            String usedLogPath = validatePath(logPath) ? logPath : getCreateDefaultLogDir();
+            System.out.println("Log path is: " + usedLogPath);
+
+            FileHandler fileHandler;
+            try {
+                fileHandler = new FileHandler(usedLogPath
+                        + format.format(Calendar.getInstance().getTime()) + ".log");
+                fileHandler.setFormatter(new SimpleFormatter());
+                LOGGER.addHandler(fileHandler);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        
+
+        LOGGER.setLevel(Level.INFO);
+    }
+
+    /**
+     * Check and create default log directory if not exists
+     *
+     * @throws RuntimeException - if the default directory does not exist loggin
+     * won't work, should create directory
+     * @return String - default log directory
+     */
+    protected static String getCreateDefaultLogDir() {
+        try {
+            File logDir = new File(System.getProperty("user.home") + DEFAULT_LOG_PATH);
+            if (!logDir.exists()) {
+                logDir.mkdir();
+            }
+
+            return System.getProperty("user.home") + DEFAULT_LOG_PATH;
+        } catch (Exception e) {
+            throw new RuntimeException("Could not create default log directory at: " + System.getProperty("user.home") + DEFAULT_LOG_PATH, e);
+        }
+    }
+
+    /**
+     * Validate if path is directory
+     *
+     * @param path
+     * @return
+     */
+    protected static boolean validatePath(String path) {
+        try {
+            File f = new File(path);
+            if (f.isDirectory()) {
+                return true;
+            }
+        } catch (Exception e) {
+            //Nothing to do will falback to default
+        }
+
         return false;
     }
-    
+
+    /**
+     * Try parse port with validation
+     *
+     * @param number
+     * @return
+     */
+    protected static boolean tryParsePort(String number) {
+        try {
+            int num = Integer.parseInt(number);
+            if (num == 80 || num == 443
+                    || (num > 1000 && num < 65535)) {
+                return true;
+            }
+        } catch (Exception e) {
+            //Not a number no way to resolve
+        }
+
+        return false;
+    }
+
     /**
      * Check if given hostname is valid
-     * 
+     *
      * @todo: should check for dns
      * @todo: should validate ip is available for current server
-     * 
+     *
      * @param hostname
      * @return true if valid
      */
-    protected static boolean tryParseHostname(String hostname){
-        try{
+    protected static boolean tryParseHostname(String hostname) {
+        try {
             //Check ip address
             return InetAddresses.isInetAddress(hostname);
-        }catch(Exception e){
+        } catch (Exception e) {
             //Not inet address 
         }
-        
+
         return false;
-        
+
     }
 }

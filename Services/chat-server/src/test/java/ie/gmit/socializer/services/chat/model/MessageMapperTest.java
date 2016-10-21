@@ -23,8 +23,8 @@
  */
 package ie.gmit.socializer.services.chat.model;
 
-import ie.gmit.socializer.services.chat.model.MessageModelMapper;
-import ie.gmit.socializer.services.chat.model.MessageModel;
+import ie.gmit.socializer.services.chat.model.MessageMapper;
+import ie.gmit.socializer.services.chat.model.Message;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
@@ -41,23 +41,23 @@ import org.junit.runners.MethodSorters;
 import org.junit.FixMethodOrder;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class MessageModelMapperTest {
+public class MessageMapperTest {
 
     static Cluster cluster;
-    static MessageModel mm1;
-    static MessageModel mm2;
-    static MessageModel mm3;
+    static Message mm1;
+    static Message mm2;
+    static Message mm3;
     static UUID[] ids;
     static UUID user_uuid;
     static UUID msession_uuid;
     static final String KEY_SPACE = "app_user_data";
 
-    public MessageModelMapperTest() {
+    public MessageMapperTest() {
     }
 
     @Before
     public void setUp() {
-        System.out.printf("\nExecuting test for %s class, method test: ", MessageModelMapper.class.getName());
+        System.out.printf("\nExecuting test for %s class, method test: ", MessageMapper.class.getName());
     }
 
     @BeforeClass
@@ -66,18 +66,18 @@ public class MessageModelMapperTest {
         ids = new UUID[]{UUIDs.random(), UUIDs.random(), UUIDs.random()};
         user_uuid = UUIDs.random();
         msession_uuid = UUIDs.random();
-        mm1 = new MessageModel(ids[0], msession_uuid, user_uuid, "Sample message", 1, System.currentTimeMillis(), System.currentTimeMillis());
-        mm2 = new MessageModel(ids[1], msession_uuid, user_uuid, "Sample message", 1, System.currentTimeMillis(), System.currentTimeMillis());
-        mm3 = new MessageModel(ids[2], msession_uuid, user_uuid, "Sample message", 1, System.currentTimeMillis(), System.currentTimeMillis());
+        mm1 = new Message(ids[0], msession_uuid, user_uuid, "Sample message", 1, System.currentTimeMillis(), System.currentTimeMillis());
+        mm2 = new Message(ids[1], msession_uuid, user_uuid, "Sample message", 1, System.currentTimeMillis(), System.currentTimeMillis());
+        mm3 = new Message(ids[2], msession_uuid, user_uuid, "Sample message", 1, System.currentTimeMillis(), System.currentTimeMillis());
     }
 
     /**
-     * Test of initializeMapper method, of class MessageModelMapper.
+     * Test of initializeMapper method, of class MessageMapper.
      */
     @Test
     public void test_001InitializeMapper() {
         System.out.println("initializeMapper");
-        MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageMapper instance = new MessageMapper(cluster.newSession(), KEY_SPACE);
         Exception exc = null;
 
         try {
@@ -90,25 +90,25 @@ public class MessageModelMapperTest {
     }
 
     /**
-     * Test of createEntry method, of class MessageModelMapper.
+     * Test of createEntry method, of class MessageMapper.
      */
     @Test
     public void test_002CreateEntry() {
         System.out.println("createEntry");
-        MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageMapper instance = new MessageMapper(cluster.newSession(), KEY_SPACE);
         boolean result = instance.createEntry(mm1); 
 
         assertEquals(true, result);
     }
 
     /**
-     * Test of createEntry method, of class MessageModelMapper.
+     * Test of createEntry method, of class MessageMapper.
      */
     @Test
     public void test_003CreateEntryAsync() {
         System.out.println("createEntryAsync");
-        MessageModel modelable = mm2;
-        MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
+        Message modelable = mm2;
+        MessageMapper instance = new MessageMapper(cluster.newSession(), KEY_SPACE);
         Exception exc = null;
 
         try {
@@ -121,15 +121,15 @@ public class MessageModelMapperTest {
     }
 
     /**
-     * Test of updateEntry method, of class MessageModelMapper.
+     * Test of updateEntry method, of class MessageMapper.
      */
     @Test
     public void test_004UpdateEntry() {
         System.out.println("updateEntry");
 
-        MessageModel modelable = (MessageModel) mm1;
+        Message modelable = (Message) mm1;
         modelable.setContent("New content");
-        MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageMapper instance = new MessageMapper(cluster.newSession(), KEY_SPACE);
         Exception exc = null;
 
         try {
@@ -142,19 +142,19 @@ public class MessageModelMapperTest {
     }
 
     /**
-     * Test of getEntry method, of class MessageModelMapper.
+     * Test of getEntry method, of class MessageMapper.
      */
     @Test
     public void test_005GetEntry() {
         System.out.println("getEntry");
-        MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
-        MessageModel result = (MessageModel)instance.getEntry(mm1);
+        MessageMapper instance = new MessageMapper(cluster.newSession(), KEY_SPACE);
+        Message result = (Message)instance.getEntry(mm1);
         
         assertEquals(true, mm1.getCreated().compareTo(result.getCreated()) == 0);
     }
 
     /**
-     * Test of getMultiple method, of class MessageModelMapper.
+     * Test of getMultiple method, of class MessageMapper.
      * This test is testing for get multiple entry with failover on not existing. 
      * The result has to be 2 even with 3 keys as the 3rd does not exist.
      */
@@ -162,24 +162,24 @@ public class MessageModelMapperTest {
     public void test_006GetMultiple() {
         System.out.println("getMultiple");
 
-        MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageMapper instance = new MessageMapper(cluster.newSession(), KEY_SPACE);
         PreparedStatement prepared = instance.session.prepare("select * from app_user_data.message where message_uuid in ? ");
         BoundStatement bound = prepared.bind(Arrays.asList(ids));
-        Result<MessageModel> result = instance.getMultiple(bound);
+        Result<Message> result = instance.getMultiple(bound);
 
         int cnt=0;
-        for(MessageModel m : result) cnt++;
+        for(Message m : result) cnt++;
             
         assertEquals(true, cnt == 2);
     }
 
     /**
-     * Test of deleteEntry method, of class MessageModelMapper.
+     * Test of deleteEntry method, of class MessageMapper.
      */
     @Test
     public void test_007DeleteEntry() {
         System.out.println("deleteEntry");
-        MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageMapper instance = new MessageMapper(cluster.newSession(), KEY_SPACE);
         boolean result = instance.deleteEntry(mm1.getMessage_uuid());
         
         assertEquals(true, result);
@@ -187,12 +187,12 @@ public class MessageModelMapperTest {
     }
     
     /**
-     * Test of deleteEntries method, of class MessageModelMapper.
+     * Test of deleteEntries method, of class MessageMapper.
      */
     @Test
     public void test_007DeleteEntries() {
         System.out.println("deleteEntry");
-        MessageModelMapper instance = new MessageModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageMapper instance = new MessageMapper(cluster.newSession(), KEY_SPACE);
         instance.createEntry(mm3);
         
         Exception exc = null;

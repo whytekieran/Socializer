@@ -35,13 +35,13 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MessageSessionModelMapper implements Mapable{
-    protected Mapper<MessageSessionModel> mapper;
+public class MessageSessionMapper implements Mappable<MessageSession>{
+    protected Mapper<MessageSession> mapper;
     protected Session session;
     protected MappingManager mappingManager;
     protected final String KEY_SPACE;
     
-    public MessageSessionModelMapper(Session session, final String keySpace) {
+    public MessageSessionMapper(Session session, final String keySpace) {
         this.session = session;
         this.mappingManager = new MappingManager(session);
         
@@ -50,27 +50,39 @@ public class MessageSessionModelMapper implements Mapable{
     }
     
     protected final void initializeMapper(){
-        mapper = mappingManager.mapper(MessageSessionModel.class);
+        mapper = mappingManager.mapper(MessageSession.class);
     }
     
-    
-    @Override
-    public boolean createEntry(Modelable modelable) {
+    /**
+     * Create new entry in Database
+     * 
+     * @param ms - MessageSession object
+     * @return true on success
+     */
+    public boolean createEntry(MessageSession ms) {
         try{
-            mapper.save((MessageSessionModel)modelable);
+            mapper.save(ms);
             return true;
         }catch(Exception e){
-            Logger.getLogger(MessageSessionModelMapper.class.getName()).log(Level.SEVERE, "Could not create cassandra entry - message_session", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not create cassandra entry - message_session", e.getMessage());
         }
         return false;
     }
 
-    @Override
-    public void createEntryAsync(Modelable modelable) {
-        mapper.saveAsync((MessageSessionModel)modelable);
+    /**
+     * Create new entry async 
+     * @param ms 
+     */
+    public void createEntryAsync(MessageSession ms) {
+        mapper.saveAsync(ms);
     }
 
-    @Override
+    /**
+     * Generate bound statement for delete entry from database
+     * 
+     * @param entryUUID - the unique identifier
+     * @return BoundStatement
+     */
     public BoundStatement getDeleteBoundStatement(UUID entryUUID) {
         PreparedStatement prepared = session.prepare(
                             String.format("delete from %s.message_session where msession_uuid = ?", KEY_SPACE)
@@ -78,49 +90,70 @@ public class MessageSessionModelMapper implements Mapable{
         return prepared.bind(entryUUID);
     }
     
-    @Override
+    /**
+     * Delete entry from database
+     * @param entryUUID - the unique identifier
+     * @return true on success
+     */
     public boolean deleteEntry(UUID entryUUID) {
         try {
             session.execute(getDeleteBoundStatement(entryUUID));
             return true;
         } catch (Exception e) {
             //This is only possible if there is no connection
-            Logger.getLogger(MessageSessionModelMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - message_session", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - message_session", e.getMessage());
         }
         return false;
     }
 
-    @Override
+    /**
+     * Delete entry async
+     * 
+     * @param entryUUID - the unique identifier
+     * @return true if no exception
+     */
     public boolean deleteEntryAsync(UUID entryUUID) {
         try {
             session.executeAsync(getDeleteBoundStatement(entryUUID));
             return true;
         } catch (Exception e) {
             //This is only possible if there is no connection
-            Logger.getLogger(MessageSessionModelMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete async - message_session", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete async - message_session", e.getMessage());
         }
         return false;
     }
 
-    @Override
+    /**
+     * Execute nonQuery
+     * 
+     * @param query - string based query
+     * @return 
+     */
     public boolean executeQuery(String query) {
         try{
             session.execute(query);
             return true;
         }catch(Exception e){
-            Logger.getLogger(MessageSessionModelMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra query - message", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra query - message", e.getMessage());
         }
         
         return false;
     }
 
-    @Override
-    public void updateEntry(Modelable modelable) {
-        mapper.saveAsync((MessageSessionModel)modelable);
+    /**
+     * Update entry in database
+     * @param ms - MessageSession object
+     */
+    public void updateEntry(MessageSession ms) {
+        mapper.saveAsync(ms);
     }
 
-    @Override
-    public Modelable getEntry(UUID entryUUID) {
+    /**
+     * Get single entry
+     * @param entryUUID
+     * @return MessageSession object or null
+     */
+    public MessageSession getEntry(UUID entryUUID) {
         PreparedStatement prepared = session.prepare(
                             String.format("select * from %s.message_session where msession_uuid = ?", KEY_SPACE)
                               );
@@ -136,13 +169,18 @@ public class MessageSessionModelMapper implements Mapable{
      * @param bound - the statement to execute
      * @return 
      */
-    public Result<MessageSessionModel> getMultiple(BoundStatement bound){
+    public Result<MessageSession> getMultiple(BoundStatement bound){
         ResultSet results = session.execute(bound);
         return mapper.map(results);
     }
     
-
-    @Override
+    /**
+     * Delete entries from db associated with MessageSession 
+     * 
+     * @param entryUUIDs
+     * @param keyColumnName
+     * @return true on success
+     */
     public boolean deleteEntries(List<UUID> entryUUIDs, String keyColumnName) {
         PreparedStatement prepared = session.prepare(
                             String.format("delete from %s.message_session where %s in ?", KEY_SPACE,  keyColumnName)
@@ -153,7 +191,7 @@ public class MessageSessionModelMapper implements Mapable{
             session.execute(bound);
             return true;
         } catch (Exception e) {
-            Logger.getLogger(MessageSessionModelMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete multiple - message_session", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete multiple - message_session", e.getMessage());
         }
 
         return false;

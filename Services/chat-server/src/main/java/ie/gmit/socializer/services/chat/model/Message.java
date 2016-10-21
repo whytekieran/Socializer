@@ -35,7 +35,7 @@ import java.util.UUID;
 @Table(keyspace = "app_user_data", name = "message",
        caseSensitiveKeyspace = false,
        caseSensitiveTable = false)
-public class MessageModel implements Modelable{
+public class Message{
     @PartitionKey(0)
     private UUID message_uuid;
     private UUID msession_uuid;
@@ -46,9 +46,9 @@ public class MessageModel implements Modelable{
     private Date created;
     private Date updated;
 
-    public MessageModel() {}
+    public Message() {}
 
-    public MessageModel(UUID message_uuid, UUID msession_uuid, UUID user_uuid, String content, int content_type, long created, long updated) {
+    public Message(UUID message_uuid, UUID msession_uuid, UUID user_uuid, String content, int content_type, long created, long updated) {
         this.message_uuid = message_uuid;
         this.msession_uuid = msession_uuid;
         this.user_uuid = user_uuid;
@@ -65,7 +65,7 @@ public class MessageModel implements Modelable{
      * @param content
      * @param content_type 
      */
-    public MessageModel(UUID msession_uuid, UUID user_uuid, String content, int content_type) {
+    public Message(UUID msession_uuid, UUID user_uuid, String content, int content_type) {
         this.msession_uuid = msession_uuid;
         this.user_uuid = user_uuid;
         this.content = content;

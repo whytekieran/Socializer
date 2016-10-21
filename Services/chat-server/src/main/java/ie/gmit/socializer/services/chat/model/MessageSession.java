@@ -34,7 +34,7 @@ import java.util.UUID;
 @Table(keyspace = "app_user_data", name = "message_session",
        caseSensitiveKeyspace = false,
        caseSensitiveTable = false)
-public class MessageSessionModel implements Modelable{
+public class MessageSession{
     @PartitionKey
     private UUID msession_uuid;
     private List<UUID> user_uuid_list;
@@ -44,7 +44,7 @@ public class MessageSessionModel implements Modelable{
     private Date created;
     private Date updated;
 
-    public MessageSessionModel() {}
+    public MessageSession() {}
 
     /**
      * Constructor for new message session with auto generated fields  
@@ -52,7 +52,7 @@ public class MessageSessionModel implements Modelable{
      * @param name - the session name
      * @param permission - the visibility & permission of extending group
      */
-    public MessageSessionModel(List<UUID> user_uuid_list, String name, int permission) {
+    public MessageSession(List<UUID> user_uuid_list, String name, int permission) {
         this.user_uuid_list = user_uuid_list;
         this.name = name;
         this.permission = permission;
@@ -67,7 +67,7 @@ public class MessageSessionModel implements Modelable{
      * @param created - timestamp of creation
      * @param updated - last updated timestamp
      */
-    public MessageSessionModel(UUID msession_uuid, List<UUID> user_uuid_list, String name, int permission, long created, long updated) {
+    public MessageSession(UUID msession_uuid, List<UUID> user_uuid_list, String name, int permission, long created, long updated) {
         this.msession_uuid = msession_uuid;
         this.user_uuid_list = user_uuid_list;
         this.name = name;

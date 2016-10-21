@@ -40,17 +40,17 @@ import org.junit.runners.MethodSorters;
 
 //Required to keep database clean after test
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class MessageSessionModelMapperTest {
+public class MessageSessionMapperTest {
     
     static Cluster cluster;
-    static MessageSessionModel msm1;
-    static MessageSessionModel msm2;
-    static MessageSessionModel msm3;
+    static MessageSession msm1;
+    static MessageSession msm2;
+    static MessageSession msm3;
     static UUID[] ids;
     static UUID[] user_uuids;
     static final String KEY_SPACE = "app_user_data";
     
-    public MessageSessionModelMapperTest() {
+    public MessageSessionMapperTest() {
     }
     
     @BeforeClass
@@ -60,24 +60,24 @@ public class MessageSessionModelMapperTest {
         ids = new UUID[]{UUIDs.random(), UUIDs.random(), UUIDs.random()};
         user_uuids = new UUID[]{UUIDs.random(), UUIDs.random()};
         
-        msm1 = new MessageSessionModel(ids[0], Arrays.asList(user_uuids), "Test session 1", 1, currenTime, currenTime);
-        msm2 = new MessageSessionModel(ids[1], Arrays.asList(user_uuids), "Test session 2", 1, currenTime, currenTime);
-        msm3 = new MessageSessionModel(ids[2], Arrays.asList(user_uuids), "Test session 3", 1, currenTime, currenTime);
+        msm1 = new MessageSession(ids[0], Arrays.asList(user_uuids), "Test session 1", 1, currenTime, currenTime);
+        msm2 = new MessageSession(ids[1], Arrays.asList(user_uuids), "Test session 2", 1, currenTime, currenTime);
+        msm3 = new MessageSession(ids[2], Arrays.asList(user_uuids), "Test session 3", 1, currenTime, currenTime);
     }
     
     
     @Before
     public void setUp() {
-        System.out.printf("\nExecuting test for %s class, method test: ", MessageModelMapper.class.getName());
+        System.out.printf("\nExecuting test for %s class, method test: ", MessageMapper.class.getName());
     }
 
     /**
-     * Test of initializeMapper method, of class MessageSessionModelMapper.
+     * Test of initializeMapper method, of class MessageSessionMapper.
      */
     @Test
     public void test_001InitializeMapper() {
         System.out.println("initializeMapper");
-        MessageSessionModelMapper instance = new MessageSessionModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageSessionMapper instance = new MessageSessionMapper(cluster.newSession(), KEY_SPACE);
         instance.initializeMapper();
         
         Exception exc = null;
@@ -92,24 +92,24 @@ public class MessageSessionModelMapperTest {
     }
 
     /**
-     * Test of createEntry method, of class MessageSessionModelMapper.
+     * Test of createEntry method, of class MessageSessionMapper.
      */
     @Test
     public void test_002CreateEntry() {
         System.out.println("createEntry");
-        MessageSessionModelMapper instance = new MessageSessionModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageSessionMapper instance = new MessageSessionMapper(cluster.newSession(), KEY_SPACE);
         boolean result = instance.createEntry(msm1);
         
         assertEquals(true, result);
     }
 
     /**
-     * Test of createEntryAsync method, of class MessageSessionModelMapper.
+     * Test of createEntryAsync method, of class MessageSessionMapper.
      */
     @Test
     public void test_003CreateEntryAsync() {
         System.out.println("createEntryAsync");
-        MessageSessionModelMapper instance = new MessageSessionModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageSessionMapper instance = new MessageSessionMapper(cluster.newSession(), KEY_SPACE);
         
         Exception exc = null;
 
@@ -124,41 +124,41 @@ public class MessageSessionModelMapperTest {
     }
 
     /**
-     * Test of getEntry method, of class MessageSessionModelMapper.
+     * Test of getEntry method, of class MessageSessionMapper.
      */
     @Test
     public void test_004GetEntry() {
         System.out.println("getEntry");
-        MessageSessionModelMapper instance = new MessageSessionModelMapper(cluster.newSession(), KEY_SPACE);
-        MessageSessionModel result = (MessageSessionModel)instance.getEntry(msm1.getMsession_uuid());
+        MessageSessionMapper instance = new MessageSessionMapper(cluster.newSession(), KEY_SPACE);
+        MessageSession result = (MessageSession)instance.getEntry(msm1.getMsession_uuid());
         
         assertEquals(true, null != result && result.getMsession_uuid().compareTo(msm1.getMsession_uuid()) == 0);
     }
 
     /**
-     * Test of getMultiple method, of class MessageSessionModelMapper.
+     * Test of getMultiple method, of class MessageSessionMapper.
      */
     @Test
     public void test_005GetMultiple() {
         System.out.println("getMultiple");
-        MessageSessionModelMapper instance = new MessageSessionModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageSessionMapper instance = new MessageSessionMapper(cluster.newSession(), KEY_SPACE);
         PreparedStatement prepared = instance.session.prepare("select * from app_user_data.message_session where msession_uuid in ?");
         BoundStatement bound = prepared.bind(Arrays.asList(ids));
-        Result<MessageSessionModel> result = instance.getMultiple(bound);
+        Result<MessageSession> result = instance.getMultiple(bound);
         int iCnt = 0;
         
-        for(MessageSessionModel ms : result) iCnt++;
+        for(MessageSession ms : result) iCnt++;
         
         assertEquals(true, 2 == iCnt);
     }
 
     /**
-     * Test of updateEntry method, of class MessageSessionModelMapper.
+     * Test of updateEntry method, of class MessageSessionMapper.
      */
     @Test
     public void test_006UpdateEntry() {
         System.out.println("updateEntry");
-        MessageSessionModelMapper instance = new MessageSessionModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageSessionMapper instance = new MessageSessionMapper(cluster.newSession(), KEY_SPACE);
         msm1.setName("Updated name");
         Exception exc = null;
 
@@ -172,24 +172,24 @@ public class MessageSessionModelMapperTest {
     }
     
     /**
-     * Test of deleteEntry method, of class MessageSessionModelMapper.
+     * Test of deleteEntry method, of class MessageSessionMapper.
      */
     @Test
     public void test_007DeleteEntry() {
         System.out.println("deleteEntry");
-        MessageSessionModelMapper instance = new MessageSessionModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageSessionMapper instance = new MessageSessionMapper(cluster.newSession(), KEY_SPACE);
         boolean result = instance.deleteEntry(msm2.getMsession_uuid());
         
         assertEquals(true, result);
     }
 
     /**
-     * Test of deleteEntryAsync method, of class MessageSessionModelMapper.
+     * Test of deleteEntryAsync method, of class MessageSessionMapper.
      */
     @Test
     public void test_008DeleteEntryAsync() {
         System.out.println("deleteEntryAsync");
-        MessageSessionModelMapper instance = new MessageSessionModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageSessionMapper instance = new MessageSessionMapper(cluster.newSession(), KEY_SPACE);
         instance.createEntry(msm3);
         
         boolean result = instance.deleteEntryAsync(msm3.getMsession_uuid());
@@ -198,12 +198,12 @@ public class MessageSessionModelMapperTest {
     }
 
     /**
-     * Test of deleteEntries method, of class MessageSessionModelMapper.
+     * Test of deleteEntries method, of class MessageSessionMapper.
      */
     @Test
     public void test_009DeleteEntries() {
         System.out.println("deleteEntries");
-        MessageSessionModelMapper instance = new MessageSessionModelMapper(cluster.newSession(), KEY_SPACE);
+        MessageSessionMapper instance = new MessageSessionMapper(cluster.newSession(), KEY_SPACE);
         instance.createEntry(msm2);
         boolean result = instance.deleteEntries(Arrays.asList(ids), "msession_uuid");
         

@@ -24,22 +24,23 @@
 package ie.gmit.socializer.services.chat.model;
 
 import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.mapping.Result;
 import java.util.List;
 import java.util.UUID;
 
-public interface Mapable{
+public interface Mappable<T>{
 
     /**
      * Create single entry in database
-     * @param modelable
+     * @param model
      */
-    public boolean createEntry(Modelable modelable);
+    public boolean createEntry(T model);
 
     /**
      * Create single entry in database async
-     * @param modelable
+     * @param model
      */
-    public void createEntryAsync(Modelable modelable);
+    public void createEntryAsync(T model);
 
     /**
      * Generate bound statement for delete
@@ -78,14 +79,19 @@ public interface Mapable{
      * Note: Method could throw an exception for invalid update or closed connection
      * @param modelable
      */
-    public void updateEntry(Modelable modelable);
+    public void updateEntry(T model);
     
     /**
      * Get single entry
      * @param entryUUID
      * @return Modelable or null
      */
-    public Modelable getEntry(UUID entryUUID);
+    public T getEntry(UUID entryUUID);
     
-    
+    /**
+     * Get multiple entries
+     * @param bound
+     * @return 
+     */
+    public Result<T> getMultiple(BoundStatement bound);
 }
