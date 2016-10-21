@@ -20,7 +20,7 @@ public class User {
 
 	@PartitionKey(0)
 	//Instance variables
-	private UUID uuid;
+	private UUID user_uuid;
 	@PartitionKey(1)
 	private String email;
 	private String password_hash;
@@ -30,21 +30,21 @@ public class User {
 	private String slug;
 	private Date dob;
 	private String phone_number;
-	private String address1;
-	private String address2;
+	private String address_1;
+	private String address_2;
+	private String address_3;
 	private String address_city;
 	private String address_county;
 	private String address_country;
-	private String profilePicUuid;
-	private String backgroundPicUuid;
+	private String profile_pic_uuid;
+	private String background_pic_uuid;
 	private List<String> workplaces;
-	private List<String> professionalSkills;
-	private List<String> livedIn;
+	private List<String> professional_skills;
+	private List<String> lived_in;
 	private List<String> connections;
 	@ClusteringColumn
 	private Date created; 
-	private Date updated;	
-	private DateFormat dateFormat;	
+	private Date updated;		
 	
 	//Empty constructor needed if we are returning JSON or XML responses
 	//Important for XML or JSON conversion
@@ -56,16 +56,17 @@ public class User {
 		
 	//Constructor new instance of a user - can overload constructor later for possible user update
 	public User(String email, String firstname, String surname, String dob, String phone_number, 
-			    String address1, String address2, String address_city, 
+			    String address1, String address2, String address3, String address_city, 
 			    String address_county, String address_country) {
 		
-		dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-		this.uuid = UUIDs.random();
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+		this.user_uuid = UUIDs.random();
 		this.email = email;
 		this.firstname = firstname;
 		this.surname = surname;
-		this.address1 = address1;
-		this.address2 = address2;
+		this.address_1 = address1;
+		this.address_2 = address2;
+		this.address_3 = address3;
 		this.address_city = address_city;
 		this.address_county = address_county;
 		this.address_country = address_country;
@@ -79,6 +80,14 @@ public class User {
 		}
 	}
 	
+	public String getPhone_number() {
+		return phone_number;
+	}
+
+	public void setPhone_number(String phone_number) {
+		this.phone_number = phone_number;
+	}
+
 	//Getters and Setters
 	public Date getCreated() {
 		return created;
@@ -88,6 +97,79 @@ public class User {
 		this.created = created;
 	}
 
+	public String getAddress_city() {
+		return address_city;
+	}
+
+	public void setAddress_city(String address_city) {
+		this.address_city = address_city;
+	}
+
+	public String getAddress_county() {
+		return address_county;
+	}
+
+	public void setAddress_county(String address_county) {
+		this.address_county = address_county;
+	}
+
+	public String getAddress_country() {
+		return address_country;
+	}
+
+	public void setAddress_country(String address_country) {
+		this.address_country = address_country;
+	}
+	
+	public String getAddress_1() {
+		return address_1;
+	}
+
+	public void setAddress_1(String address_1) {
+		this.address_1 = address_1;
+	}
+
+	public String getAddress_2() {
+		return address_2;
+	}
+
+	public void setAddress_2(String address_2) {
+		this.address_2 = address_2;
+	}
+
+	public String getAddress_3() {
+		return address_3;
+	}
+
+	public void setAddress_3(String address_3) {
+		this.address_3 = address_3;
+	}
+	
+	public String getProfile_pic_uuid() {
+		return profile_pic_uuid;
+	}
+
+	public void setProfile_pic_uuid(String profile_pic_uuid) {
+		this.profile_pic_uuid = profile_pic_uuid;
+	}
+
+	public String getBackground_pic_uuid() {
+		return background_pic_uuid;
+	}
+
+	public void setBackground_pic_uuid(String background_pic_uuid) {
+		this.background_pic_uuid = background_pic_uuid;
+	}
+
+	public UUID getUser_uuid() {
+		return user_uuid;
+	}
+
+	public void setUser_uuid(UUID user_uuid) {
+		this.user_uuid = user_uuid;
+	}
+
+
 	public Date getUpdated() {
 		return updated;
 	}
@@ -96,20 +178,20 @@ public class User {
 		this.updated = updated;
 	}
 
-	public UUID getUuid() {
-		return uuid;
-	}
-
-	public void setUuid(UUID uuid) {
-		this.uuid = uuid;
-	}
-
 	public String getEmail() {
 		return email;
 	}
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public List<String> getProfessional_skills() {
+		return professional_skills;
+	}
+
+	public void setProfessional_skills(List<String> professional_skills) {
+		this.professional_skills = professional_skills;
 	}
 
 	public String getPassword_hash() {
@@ -126,14 +208,6 @@ public class User {
 
 	public void setHash_secret(String hash_secret) {
 		this.hash_secret = hash_secret;
-	}
-
-	public String getFirstName() {
-		return firstname;
-	}
-
-	public void setFirstName(String firstname) {
-		this.firstname = firstname;
 	}
 
 	public String getSurname() {
@@ -160,14 +234,6 @@ public class User {
 		this.dob = dob;
 	}
 
-	public String getPhoneNumber() {
-		return phone_number;
-	}
-
-	public void setPhoneNumber(String phone_number) {
-		this.phone_number = phone_number;
-	}
-
 	public String getFirstname() {
 		return firstname;
 	}
@@ -175,63 +241,7 @@ public class User {
 	public void setFirstname(String firstname) {
 		this.firstname = firstname;
 	}
-
-	public String getAddress1() {
-		return address1;
-	}
-
-	public void setAddress1(String address1) {
-		this.address1 = address1;
-	}
-
-	public String getAddress2() {
-		return address2;
-	}
-
-	public void setAddress2(String address2) {
-		this.address2 = address2;
-	}
-
-	public String getAddressCity() {
-		return address_city;
-	}
-
-	public void setAddressCity(String addressCity) {
-		this.address_city = addressCity;
-	}
-
-	public String getAddressCounty() {
-		return address_county;
-	}
-
-	public void setAddressCounty(String addressCounty) {
-		this.address_county = addressCounty;
-	}
-
-	public String getAddressCountry() {
-		return address_country;
-	}
-
-	public void setAddressCountry(String addressCountry) {
-		this.address_country = addressCountry;
-	}
-
-	public String getProfilePicUuid() {
-		return profilePicUuid;
-	}
-
-	public void setProfilePicUuid(String profilePicUuid) {
-		this.profilePicUuid = profilePicUuid;
-	}
-
-	public String getBackgroundPicUuid() {
-		return backgroundPicUuid;
-	}
-
-	public void setBackgroundPicUuid(String backgroundPicUuid) {
-		this.backgroundPicUuid = backgroundPicUuid;
-	}
-
+	
 	public List<String> getWorkplaces() {
 		return workplaces;
 	}
@@ -240,27 +250,19 @@ public class User {
 		this.workplaces = workplaces;
 	}
 
-	public List<String> getProfessionalSkills() {
-		return professionalSkills;
-	}
-
-	public void setProfessionalSkills(List<String> professionalSkills) {
-		this.professionalSkills = professionalSkills;
-	}
-
-	public List<String> getLivedIn() {
-		return livedIn;
-	}
-
-	public void setLivedIn(List<String> livedIn) {
-		this.livedIn = livedIn;
-	}
-
 	public List<String> getConnections() {
 		return connections;
 	}
 
 	public void setConnections(List<String> connections) {
 		this.connections = connections;
+	}
+
+	public List<String> getLived_in() {
+		return lived_in;
+	}
+
+	public void setLived_in(List<String> lived_in) {
+		this.lived_in = lived_in;
 	}
 }

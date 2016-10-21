@@ -27,7 +27,7 @@ public class UserService {
 
 	//Add a new user
 	public UUID createUser(User newUser){
-		UUID userId = newUser.getUuid();
+		UUID userId = newUser.getUser_uuid();
 		userMapper.createEntryAsync(newUser);
 		return userId;
 	}
