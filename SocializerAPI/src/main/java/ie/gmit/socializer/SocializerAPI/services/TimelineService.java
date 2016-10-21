@@ -18,10 +18,6 @@ public class TimelineService {
 	private Mapper<Timeline> mapper;
 	
 	public TimelineService(){
-		//PROBLEM HERE WITH CONNECTION TO CASSANDRA - HOPEFULLY RESOLVE SOON
-		cluster = CassandraConnector.initalizeConnection("timeline data area cassandra goes here");
-		session = cluster.newSession().init();
-		manager = new MappingManager(session);
-		mapper = manager.mapper(Timeline.class);
+		
 	}
 }

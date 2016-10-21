@@ -1,5 +1,7 @@
 package ie.gmit.socializer.SocializerAPI.resources;
 
+import java.util.UUID;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -19,6 +21,8 @@ import ie.gmit.socializer.SocializerAPI.services.UserService;
 @Path("/user")
 public class UserResource {
 
+	//User service handles all communication (CRUD) for User objects between resource URL's and 
+	//Cassandra by using Mapper classes
 	UserService uService = new UserService();
 	
 	@POST 
@@ -27,7 +31,7 @@ public class UserResource {
 	@Path("/new")
 	public Response newUser(@Context UriInfo uriInfo, User user, @HeaderParam("Content-Type") String contentTypeValue){
 		
-		UUIDs uuid = uService.createUser(user);
+		UUID uuid = uService.createUser(user);
 		String uri = uriInfo.getAbsolutePath().toString();
 	
 		try 

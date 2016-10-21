@@ -7,11 +7,21 @@ import java.util.*;
 
 //import com.datastax.driver.core.TimestampGenerator;
 import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.driver.mapping.annotations.ClusteringColumn;
+import com.datastax.driver.mapping.annotations.PartitionKey;
+import com.datastax.driver.mapping.annotations.Table;
 
+//User class written by Ciaran Whyte
+//Defines this as a Cassandra "Table"
+@Table(keyspace = "app_user_data", name = "user",
+caseSensitiveKeyspace = false,
+caseSensitiveTable = false)
 public class User {
 
+	@PartitionKey(0)
 	//Instance variables
-	private UUIDs uuid;
+	private UUID uuid;
+	@PartitionKey(1)
 	private String email;
 	private String password_hash;
 	private String hash_secret;
@@ -31,10 +41,10 @@ public class User {
 	private List<String> professionalSkills;
 	private List<String> livedIn;
 	private List<String> connections;
-	private long created;    //hold long time stamps when user is created and updated
-	//private long updated;	//used to hold value when user updated his/her details
-	private DateFormat dateFormat;	//Used to format string 'dob' into a valid date format
-	//private Timeline userTL; //User has a Timeline
+	@ClusteringColumn
+	private Date created; 
+	private Date updated;	
+	private DateFormat dateFormat;	
 	
 	//Empty constructor needed if we are returning JSON or XML responses
 	//Important for XML or JSON conversion
@@ -44,12 +54,13 @@ public class User {
 		
 	}
 		
-	//Constructor ...could maybe add more? Multiple overloaded constructors?
+	//Constructor new instance of a user - can overload constructor later for possible user update
 	public User(String email, String firstname, String surname, String dob, String phone_number, 
 			    String address1, String address2, String address_city, 
 			    String address_county, String address_country) {
 		
 		dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+		this.uuid = UUIDs.random();
 		this.email = email;
 		this.firstname = firstname;
 		this.surname = surname;
@@ -59,19 +70,37 @@ public class User {
 		this.address_county = address_county;
 		this.address_country = address_country;
 		this.phone_number = phone_number;
+		this.created = new Date();
+		this.updated = new Date();
 		try {
 			this.dob = dateFormat.parse(dob);
 		} catch (ParseException e) {
-			e.printStackTrace();
+			System.out.println("Problem parsing date");
 		}
 	}
 	
 	//Getters and Setters
-	public UUIDs getUuid() {
+	public Date getCreated() {
+		return created;
+	}
+
+	public void setCreated(Date created) {
+		this.created = created;
+	}
+
+	public Date getUpdated() {
+		return updated;
+	}
+
+	public void setUpdated(Date updated) {
+		this.updated = updated;
+	}
+
+	public UUID getUuid() {
 		return uuid;
 	}
 
-	public void setUuid(UUIDs uuid) {
+	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
 	}
 
@@ -229,14 +258,6 @@ public class User {
 
 	public List<String> getConnections() {
 		return connections;
-	}
-	
-	public long getCreated() {
-		return created;
-	}
-
-	public void setCreated(long created) {
-		this.created = created;
 	}
 
 	public void setConnections(List<String> connections) {

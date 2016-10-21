@@ -1,55 +1,63 @@
 package ie.gmit.socializer.SocializerAPI.services;
 
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.mapping.Mapper;
-import com.datastax.driver.mapping.MappingManager;
-import com.datastax.driver.core.Session;
-//import static com.datastax.driver.mapping.Mapper.Option.*;
-import com.datastax.driver.core.utils.UUIDs;
 
-import java.util.Date;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import ie.gmit.socializer.SocializerAPI.database.CassandraConnector;
 import ie.gmit.socializer.SocializerAPI.models.User;
+import ie.gmit.socializer.SocializerAPI.models.UserMapper;
 
 public class UserService {
 	
-	private Session session;
 	private Cluster cluster;
-	private MappingManager manager;
-	private Mapper<User> mapper;
-	private Date date = new Date();
+	private UserMapper userMapper;
+	static final String KEY_SPACE = "app_user_data";
 	
 	public UserService(){
-		//PROBLEM HERE WITH CONNECTION TO CASSANDRA - HOPEFULLY RESOLVE SOON
-		cluster = CassandraConnector.initalizeConnection("app_user_data");
-		session = cluster.newSession().init();
-		manager = new MappingManager(session);
-		mapper = manager.mapper(User.class);
+		cluster = CassandraConnector.initalizeConnection("app_user_data");//connect to cluster
+		initializeUserMapper(cluster);//use cluster to initialize session and user mapper object
+	}
+	
+	private final void initializeUserMapper(Cluster cluster){
+		userMapper = new UserMapper(cluster.newSession(), KEY_SPACE);
 	}
 
-	//Could also implement method to get multiple users....maybe if search is being implemented?
+	//Add a new user
+	public UUID createUser(User newUser){
+		UUID userId = newUser.getUuid();
+		userMapper.createEntryAsync(newUser);
+		return userId;
+	}
 	
-	public UUIDs createUser(User newUser){
+	//Get a specific user
+	public User getUser(UUID uuid){
+		return userMapper.getEntry(uuid);
+	}
+	
+	//Update user
+	public boolean updateUser(User user){
+		try{
+			userMapper.updateEntry(user);
+			return true;
+		}catch(Exception e){
+			Logger.getLogger(UserService.class.getName()).log(Level.SEVERE, "Could not execute cassandra update - user", e.getMessage());
+		}
 		
-		newUser.setCreated(date.getTime());
-		mapper.save(newUser);
-		newUser = mapper.get(newUser.getEmail());
+		return false;
+	}
+	
+	//Delete user
+	public boolean deleteUser(UUID uuid){
+		try{
+			userMapper.deleteEntryAsync(uuid);
+			return true;
+		}catch(Exception e){
+			Logger.getLogger(UserService.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - user", e.getMessage());
+		}
 		
-		return newUser.getUuid();
-	}
-	
-	public User getUser(String uuid){
-		//do stuff, interact with data class in the data package
-		return null;
-	}
-	
-	public User updateUser(String uuid){
-		//do stuff, interact with data class in the data package
-		return null;
-	}
-	
-	public void deleteUser(String uuid){
-		//do stuff, interact with data class in the data package
+		return false;
 	}
 }
