@@ -29,7 +29,7 @@ public class UserService {
 	public UUID createUser(User newUser){
 		UUID userId = newUser.getUser_uuid();
 		userMapper.createEntryAsync(newUser);
-		return userId;
+		return userId;//return the new user id
 	}
 	
 	//Get a specific user

@@ -27,6 +27,7 @@ public class User {
 	private String hash_secret;
 	private String firstname;
 	private String surname;
+	@ClusteringColumn
 	private String slug;
 	private Date dob;
 	private String phone_number;
@@ -42,7 +43,6 @@ public class User {
 	private List<String> professional_skills;
 	private List<String> lived_in;
 	private List<String> connections;
-	@ClusteringColumn
 	private Date created; 
 	private Date updated;		
 	

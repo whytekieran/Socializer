@@ -13,38 +13,41 @@ import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.driver.mapping.Result;
 
-//User Mapper class for handling Users by Ciaran Whyte while using Peters work as a reference, the 
-//Mappable interface was written by Peter Nagy.
-//Mapper interface declares all methods associated with a Mapper. Can then use the interface and re-define
-//the methods for our own implementation.
-public class UserMapper implements Mappable<User> {
+//Timeline Mapper class for handling timeline posts by Ciaran Whyte while using Peters work as a reference,
+//the Mappable interface was written by Peter Nagy. 
+//Mapper interface declares all methods associated with a Mapper. Can then use the 
+//interface and re-define the methods for our own implementation.
+public class TimelineMapper implements Mappable<Timeline> {
 
-	private Mapper<User> mapper;
+	private Mapper<Timeline> mapper;
     private Session session;
     private MappingManager mappingManager;
     private final String KEY_SPACE;
 	
-    //Constructor accepts the current session and the key space (column family) and the Cassandra database.
-	public UserMapper(Session session, final String keySpace){
+	public TimelineMapper(Session session, final String keySpace){
 		
 		this.session = session;
         this.mappingManager = new MappingManager(session);
         KEY_SPACE = keySpace;
-        initializeUserMapper();
+        initializeTimelineMapper();
 	}
 	
-	private final void initializeUserMapper() {
-        mapper = mappingManager.mapper(User.class);
+	private final void initializeTimelineMapper() {
+        mapper = mappingManager.mapper(Timeline.class);
+	}
+	
+	public Session getCurrentSession(){
+		return session;
 	}
 	
 	@Override
-	public boolean createEntry(User model) {
+	public boolean createEntry(Timeline model) {
 		try {
             mapper.save(model);
             return true;
         } catch (Exception e) {
         	//If there is a problem use the java.util logger to keep a log of the issue. - No connection
-            Logger.getLogger(UserMapper.class.getName()).log(Level.SEVERE, "Could not create cassandra entry - user", e.getMessage());
+            Logger.getLogger(TimelineMapper.class.getName()).log(Level.SEVERE, "Could not create cassandra entry - timeline", e.getMessage());
         }
 
 		return false;	//If we reach this point of the method return false
@@ -52,16 +55,16 @@ public class UserMapper implements Mappable<User> {
 
 	@Override
 	//Asynchronous...run in the background and allow other processes to continue
-	public void createEntryAsync(User model) {
-		 mapper.saveAsync(model);
+	public void createEntryAsync(Timeline model) {
+		mapper.saveAsync(model);
 	}
 
 	@Override
 	//Method that uses a ready prepared statement then binds a variable to it. This is returned
-	//as a BoundStatement. In this case the BoundStatement is for deleting users.
+	//as a BoundStatement. In this case the BoundStatement is for deleting timeline posts.
 	public BoundStatement getDeleteBoundStatement(UUID entryUUID) {
 		PreparedStatement prepared = session.prepare(
-                String.format("delete from %s.user where user_uuid = ?", KEY_SPACE)
+                String.format("delete from %s.timeline where post_uuid = ?", KEY_SPACE)
         );
 		
 		return prepared.bind(entryUUID);//Here we bind the statement to the variable then return it
@@ -75,7 +78,7 @@ public class UserMapper implements Mappable<User> {
             return true;
         } catch (Exception e) {
             //This is only possible if there is no connection
-            Logger.getLogger(UserMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - message", e.getMessage());
+            Logger.getLogger(TimelineMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - timeline", e.getMessage());
         }
 		
 		return false;
@@ -90,70 +93,72 @@ public class UserMapper implements Mappable<User> {
             return true;
         } catch (Exception e) {
             //This is only possible if there is no connection
-            Logger.getLogger(UserMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - message", e.getMessage());
+            Logger.getLogger(TimelineMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - timeline", e.getMessage());
         }
 		
 		return false;
 	}
 
 	@Override
+	//delete multiple posts - if needed
 	public boolean deleteEntries(List<UUID> entryUUIDs, String keyColumnName) {
 		//Prepare statement with string formatter 
 		PreparedStatement prepared = session.prepare(
-                String.format("delete from %s.user where %s in ?", KEY_SPACE, keyColumnName)
-        );
+		        String.format("delete from %s.timeline where %s in ?", KEY_SPACE, keyColumnName)
+		);
 		//Bind variable (?) to parameter using .bind()
-        BoundStatement bound = prepared.bind(entryUUIDs);
+		BoundStatement bound = prepared.bind(entryUUIDs);
 
-        try {
-            session.execute(bound);			//Execute the statement and if successful return true
-            return true;
-        } catch (Exception e) {
-        	//Otherwise log the error....
-            Logger.getLogger(UserMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete multiple - message", e.getMessage());
-        }
+		try {
+		    session.execute(bound);			//Execute the statement and if successful return true
+		    return true;
+		} catch (Exception e) {
+		    //Otherwise log the error....
+		    Logger.getLogger(TimelineMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete multiple - timeline", e.getMessage());
+		}
 
-        return false;		//....and return false
+		return false;		//....and return false
 	}
 
 	@Override
 	//Simply executes a query (string)
 	public boolean executeQuery(String query) {
 		try {
-            session.execute(query);
+            session.execute(query);//execute the query and if unsuccessful log the error
             return true;
         } catch (Exception e) {
-            Logger.getLogger(UserMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra query - message", e.getMessage());
+            Logger.getLogger(TimelineMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra query - user", e.getMessage());
         }
 
 		return false;
 	}
 
 	@Override
-	public void updateEntry(User model) {
+	public void updateEntry(Timeline model) {
 		//If uuid or any other index matches the mapper will simply do the update for us.
 		mapper.saveAsync(model);
 	}
 
 	@Override
-	//Get a particular user
-	public User getEntry(UUID entryUUID) {
+	//Get a particular timeline entry
+	public Timeline getEntry(UUID entryUUID) {
 		PreparedStatement prepared = session.prepare(
-                String.format("select * from %s.user where user_uuid = ?", KEY_SPACE)
+                String.format("select * from %s.timeline where post_uuid = ?", KEY_SPACE)
         );
         
 		BoundStatement bound = prepared.bind(entryUUID);
         ResultSet results = session.execute(bound);
 
-        //gets the next one...but all uuids for users are unique hence there will only be one user here 
-        //to return because query above is based on user_uuid
+        //gets the next one...but all uuids for posts are unique hence there will only be one post here 
+        //to return because query above is based on post_uuid
         return mapper.map(results).one();
 	}
 
 	@Override
-	//Used if we want to retrieve multiple users. Accepts a pre-made bound statement
-	public Result<User> getMultiple(BoundStatement bound) {
+	//Used if we want to retrieve multiple timeline posts. Accepts a pre-made bound statement
+	public Result<Timeline> getMultiple(BoundStatement bound) {
 		ResultSet results = session.execute(bound);//Execute the statement and get the result set
-		return mapper.map(results);//Will fetch User entities from result set using their PRIMARY KEY.
+		return mapper.map(results);//Will fetch Timeline entities from result set using their PRIMARY KEY.
 	}
+
 }
