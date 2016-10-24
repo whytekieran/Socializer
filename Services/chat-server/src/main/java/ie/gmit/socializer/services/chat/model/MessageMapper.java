@@ -65,7 +65,7 @@ public class MessageMapper implements Mappable<Message> {
             mapper.save(model);
             return true;
         } catch (Exception e) {
-            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not create cassandra entry - message", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not create cassandra entry - message", e);
         }
 
         return false;
@@ -124,7 +124,7 @@ public class MessageMapper implements Mappable<Message> {
             return true;
         } catch (Exception e) {
             //This is only possible if there is no connection
-            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - message", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - message", e);
         }
         return false;
     }
@@ -139,7 +139,7 @@ public class MessageMapper implements Mappable<Message> {
             session.execute(getDeleteBoundStatement(entryUUID));
             return true;
         } catch (Exception e) {
-            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - message", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - message", e);
         }
         return false;
     }
@@ -161,7 +161,7 @@ public class MessageMapper implements Mappable<Message> {
             session.execute(bound);
             return true;
         } catch (Exception e) {
-            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete multiple - message", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete multiple - message", e);
         }
 
         return false;
@@ -177,7 +177,7 @@ public class MessageMapper implements Mappable<Message> {
             session.execute(query);
             return true;
         } catch (Exception e) {
-            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra query - message", e.getMessage());
+            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra query - message", e);
         }
 
         return false;

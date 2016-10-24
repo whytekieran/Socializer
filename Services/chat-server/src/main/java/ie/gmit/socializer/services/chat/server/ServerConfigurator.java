@@ -24,6 +24,7 @@
 package ie.gmit.socializer.services.chat.server;
 
 import com.google.common.net.InetAddresses;
+import ie.gmit.socializer.services.chat.log.LogFormatter;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
@@ -41,6 +42,7 @@ public class ServerConfigurator {
 
     protected static final String DEFAULT_LOG_PATH = "/logs";
     protected static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    protected static String usedLogPath = "n/a";
     /**
      * Route the command line parameters to server objects
      *
@@ -48,6 +50,7 @@ public class ServerConfigurator {
      * @todo: Implement keyring management and generation for wss support
      *
      * @param cli - Initialized CommandLine object with current parameters
+     * @return initialized server or null
      */
     protected static WebSocketServer configureServer(final CommandLine cli) {
         configureServerLogging(cli);
@@ -61,12 +64,16 @@ public class ServerConfigurator {
                 && cli.hasOption('p') && tryParsePort(cli.getOptionValue('p'))) {
             //Check protocol params
             if (cli.hasOption('s')
-                    && cli.getOptionValue('s').equalsIgnoreCase("ws") || cli.getOptionValue('s').equalsIgnoreCase("wss")) {
+                    && (cli.getOptionValue('s').equalsIgnoreCase("ws") || cli.getOptionValue('s').equalsIgnoreCase("wss"))) {
                 //start with specified socket type
                 //@todo: this has to implement server side keyring management (use keytool)
             } else {
                 //normal run
             }
+            
+            System.out.println(LogFormatter.applicationStart(
+                                cli.getOptionValue('i'), cli.getOptionValue('p'), usedLogPath));
+            
             return new CryptoSocketServer(
                     new InetSocketAddress(cli.getOptionValue('i'), Integer.parseInt(cli.getOptionValue('p'))), cli.hasOption('d'), cli.hasOption('v'));
         }
@@ -108,8 +115,7 @@ public class ServerConfigurator {
             
             //Format and handle file based loggin
             SimpleDateFormat format = new SimpleDateFormat("M-d_HHmmss");
-            String usedLogPath = validatePath(logPath) ? logPath : getCreateDefaultLogDir();
-            System.out.println("Log path is: " + usedLogPath);
+            usedLogPath = validatePath(logPath) ? logPath : getCreateDefaultLogDir();
 
             FileHandler fileHandler;
             try {
