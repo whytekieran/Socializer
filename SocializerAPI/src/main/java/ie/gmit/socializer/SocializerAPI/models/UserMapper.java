@@ -13,6 +13,8 @@ import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.driver.mapping.Result;
 
+import ie.gmit.socializer.SocializerAPI.utilities.Mappable;
+
 //User Mapper class for handling Users by Ciaran Whyte while using Peters work as a reference, the 
 //Mappable interface was written by Peter Nagy.
 //Mapper interface declares all methods associated with a Mapper. Can then use the interface and re-define
@@ -45,6 +47,7 @@ public class UserMapper implements Mappable<User> {
         } catch (Exception e) {
         	//If there is a problem use the java.util logger to keep a log of the issue. - No connection
             Logger.getLogger(UserMapper.class.getName()).log(Level.SEVERE, "Could not create cassandra entry - user", e.getMessage());
+            System.out.println(e);
         }
 
 		return false;	//If we reach this point of the method return false
@@ -133,6 +136,20 @@ public class UserMapper implements Mappable<User> {
 	public void updateEntry(User model) {
 		//If uuid or any other index matches the mapper will simply do the update for us.
 		mapper.saveAsync(model);
+	}
+	
+	public User getUserBasedOnEmail(String email){
+		
+		PreparedStatement prepared = session.prepare(
+                String.format("select * from %s.user where email=?", KEY_SPACE)
+        );
+        
+		BoundStatement bound = prepared.bind(email);
+        ResultSet results = session.execute(bound);
+
+        //gets the next one...but all emails for users are unique hence there will only be one user 
+        //here to return because query above is based on email
+        return mapper.map(results).one();
 	}
 
 	@Override

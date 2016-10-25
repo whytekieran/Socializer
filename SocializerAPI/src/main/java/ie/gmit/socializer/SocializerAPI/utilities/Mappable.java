@@ -1,4 +1,4 @@
-package ie.gmit.socializer.SocializerAPI.models;
+package ie.gmit.socializer.SocializerAPI.utilities;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.mapping.Result;

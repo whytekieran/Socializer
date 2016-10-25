@@ -1,8 +1,5 @@
 package ie.gmit.socializer.SocializerAPI.models;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 //import com.datastax.driver.core.TimestampGenerator;
@@ -29,7 +26,7 @@ public class User {
 	private String surname;
 	@ClusteringColumn
 	private String slug;
-	private Date dob;
+	private String dob;
 	private String phone_number;
 	private String address_1;
 	private String address_2;
@@ -37,12 +34,12 @@ public class User {
 	private String address_city;
 	private String address_county;
 	private String address_country;
-	private String profile_pic_uuid;
-	private String background_pic_uuid;
+	private UUID profile_pic_uuid;
+	private UUID background_pic_uuid;
 	private List<String> workplaces;
 	private List<String> professional_skills;
 	private List<String> lived_in;
-	private List<String> connections;
+	private List<UUID> connections;
 	private Date created; 
 	private Date updated;		
 	
@@ -55,11 +52,10 @@ public class User {
 	}
 		
 	//Constructor new instance of a user - can overload constructor later for possible user update
-	public User(String email, String firstname, String surname, String dob, String phone_number, 
+	/*public User(String email, String firstname, String surname, String dob, String phone_number, 
 			    String address1, String address2, String address3, String address_city, 
 			    String address_county, String address_country) {
 		
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 		this.user_uuid = UUIDs.random();
 		this.email = email;
 		this.firstname = firstname;
@@ -73,20 +69,8 @@ public class User {
 		this.phone_number = phone_number;
 		this.created = new Date();
 		this.updated = new Date();
-		try {
-			this.dob = dateFormat.parse(dob);
-		} catch (ParseException e) {
-			System.out.println("Problem parsing date");
-		}
-	}
-	
-	public String getPhone_number() {
-		return phone_number;
-	}
-
-	public void setPhone_number(String phone_number) {
-		this.phone_number = phone_number;
-	}
+		this.dob = dob;
+	}*/
 
 	//Getters and Setters
 	public Date getCreated() {
@@ -95,6 +79,14 @@ public class User {
 
 	public void setCreated(Date created) {
 		this.created = created;
+	}
+	
+	public String getPhone_number() {
+		return phone_number;
+	}
+
+	public void setPhone_number(String phone_number) {
+		this.phone_number = phone_number;
 	}
 
 	public String getAddress_city() {
@@ -145,19 +137,19 @@ public class User {
 		this.address_3 = address_3;
 	}
 	
-	public String getProfile_pic_uuid() {
+	public UUID getProfile_pic_uuid() {
 		return profile_pic_uuid;
 	}
 
-	public void setProfile_pic_uuid(String profile_pic_uuid) {
+	public void setProfile_pic_uuid(UUID profile_pic_uuid) {
 		this.profile_pic_uuid = profile_pic_uuid;
 	}
 
-	public String getBackground_pic_uuid() {
+	public UUID getBackground_pic_uuid() {
 		return background_pic_uuid;
 	}
 
-	public void setBackground_pic_uuid(String background_pic_uuid) {
+	public void setBackground_pic_uuid(UUID background_pic_uuid) {
 		this.background_pic_uuid = background_pic_uuid;
 	}
 
@@ -226,11 +218,11 @@ public class User {
 		this.slug = slug;
 	}
 
-	public Date getDob() {
+	public String getDob() {
 		return dob;
 	}
 
-	public void setDob(Date dob) {
+	public void setDob(String dob) {
 		this.dob = dob;
 	}
 
@@ -246,16 +238,16 @@ public class User {
 		return workplaces;
 	}
 
-	public void setWorkplaces(List<String> workplaces) {
-		this.workplaces = workplaces;
-	}
-
-	public List<String> getConnections() {
+	public List<UUID> getConnections() {
 		return connections;
 	}
 
-	public void setConnections(List<String> connections) {
+	public void setConnections(List<UUID> connections) {
 		this.connections = connections;
+	}
+
+	public void setWorkplaces(List<String> workplaces) {
+		this.workplaces = workplaces;
 	}
 
 	public List<String> getLived_in() {

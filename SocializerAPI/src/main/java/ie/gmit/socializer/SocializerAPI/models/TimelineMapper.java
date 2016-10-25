@@ -13,6 +13,8 @@ import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.driver.mapping.Result;
 
+import ie.gmit.socializer.SocializerAPI.utilities.Mappable;
+
 //Timeline Mapper class for handling timeline posts by Ciaran Whyte while using Peters work as a reference,
 //the Mappable interface was written by Peter Nagy. 
 //Mapper interface declares all methods associated with a Mapper. Can then use the 
