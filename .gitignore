@@ -5,7 +5,7 @@
 
 # Folders
 _obj
-_test
+#_test
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -80,3 +80,14 @@ local.properties
 
 # Ignore config files
 *.local.json
+
+# Netbeans exclusions
+/nbproject/
+/build/
+build.xml
+manifest.mf
+*.local.*
+/dist/
+nb*
+
+/Services/chat-server/target/
