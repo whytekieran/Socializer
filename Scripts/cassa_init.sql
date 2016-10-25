@@ -139,7 +139,7 @@ with replication = {'class': 'NetworkTopologyStrategy', 'replication_factor' : 3
 	access_token text,
 	client_uuid uuid,
 	user_uuid uuid,
-	expires int,
+	expires timestamp,
 	scope text,
 	token_type text,
 	created timestamp,
