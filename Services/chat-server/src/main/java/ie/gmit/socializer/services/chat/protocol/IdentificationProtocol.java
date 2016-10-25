@@ -23,7 +23,9 @@
  */
 package ie.gmit.socializer.services.chat.protocol;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -35,28 +37,65 @@ public class IdentificationProtocol {
 
     public IdentificationProtocol() {
         objectMapper = new ObjectMapper();
+        objectMapper.setSerializationInclusion(Include.NON_NULL);//Avoid generating null values
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);//Remove the unknown fields
     }
     
+    /**
+     * 
+     * @todo: Should check token modification attack (use a hashmap as current connection => key, value => token )
+     * 
+     * @param jsonMessage
+     * @return 
+     */
     public String routeSocketMessage(final String jsonMessage){
-        SocketMessage sm = tryConvertSocketMessage(jsonMessage);
+        SocketMessage sm = tryConvertSocketMessage(jsonMessage, SocketMessage.class);
         int messageState = sm == null ? -1 : sm.getState();
-        SocketMessage response = null;
-        System.err.println("sm " + sm.getToken());
+        int msVersion = sm == null ? 99 : sm.getVersion();
+        SocketMessage response;
         
-        if(messageState < 0){
+        if(messageState < 0 || msVersion != VERSION){
             //invalid message state
-            response = new ErrorMessage("API.CHAT.PROTOCOL.VERIFICATION", 400, "Invalid message state", sm.getState(), VERSION);
+            response = new ErrorMessage("API.CHAT.PROTOCOL.VERIFICATION", 400, "Invalid message state or structure. Please use js library", messageState, VERSION);
         }else if(messageState < 10){
-            
+            //Authentication protocol call
+            //Validate token and state
+            //Check the client generated hash agains the stored hash // or store it
+            //check if fileds are initialized for keys 
+                //if are and nothing is stored => store them
+                //else ignore (possible smart ass)
+            response = tryConvertSocketMessage(jsonMessage, AuthenticationMessage.class);
+        }else if(messageState < 20){
+            //Action message
+            //Validate token and state
+            //Validate action, possibly route to existing session or execute action
+            response = tryConvertSocketMessage(jsonMessage, ActionMessage.class);
+        }else if(messageState < 30){
+            //Session message
+            //Validate token and state
+            //Get the session id and handle the storage of the message
+            response = tryConvertSocketMessage(jsonMessage, SessionMessage.class);
+        }else{
+            //Can not idetify
+            response = new ErrorMessage("API.CHAT.PROTOCOL.VERIFICATION", 400, "Invalid message state", messageState, VERSION);
         }
         
         
         return convertObjectToString(response);
     }
     
-    private SocketMessage tryConvertSocketMessage(final String jsonMessage){
+    
+    /**
+     * Try convert socket message json string to object
+     * 
+     * @param <T> - a SocketMessage object to serialize
+     * @param jsonMessage - 
+     * @param type
+     * @return 
+     */
+    private <T extends Object> T tryConvertSocketMessage(final String jsonMessage, Class<T> type){
         try {
-            return objectMapper.readValue(jsonMessage.getBytes("UTF-8"), SocketMessage.class);
+            return objectMapper.readValue(jsonMessage.getBytes("UTF-8"), type);
         } catch (IOException ex) {
             Logger.getLogger(IdentificationProtocol.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -64,6 +103,11 @@ public class IdentificationProtocol {
         return null;
     }
     
+    /**
+     * Try convert object to json string
+     * @param sm
+     * @return 
+     */
     private String convertObjectToString(SocketMessage sm){
         try {
             return objectMapper.writeValueAsString(sm);

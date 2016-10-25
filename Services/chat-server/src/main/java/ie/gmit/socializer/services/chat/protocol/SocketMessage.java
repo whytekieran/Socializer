@@ -26,7 +26,7 @@ package ie.gmit.socializer.services.chat.protocol;
 public class SocketMessage {    
     private int version; // The protocol version
     private String token; // The bearer token from authorizitation
-    private int state; //The protocol state (0-9>>init, 10-19>>auth, etc.)
+    private int state; //The protocol state (0-9>>init, 10-19>>auth, 20-29>>action message, 30-39>>session message)
     
     public int getVersion() {
         return version;
