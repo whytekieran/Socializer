@@ -37,7 +37,7 @@ import org.apache.commons.codec.binary.Hex;
        caseSensitiveTable = false)
 public class OauthToken {
     @PartitionKey(0)
-    private String access_token;
+    private UUID access_token;
     private UUID client_uuid;
     private UUID user_uuid;
     private Date expires;
@@ -45,21 +45,32 @@ public class OauthToken {
     private String token_type;
     private Date created;
 
+    public OauthToken(){}
+    
+    /**
+     * Constructor for new token
+     * 
+     * @param client_uuid - valid oauth client id
+     * @param user_uuid - valid user_uuid
+     * @param expires - the date the token expires
+     * @param scope - the scope for the token user
+     * @param token_type - eg: client_credentials
+     */
     public OauthToken(UUID client_uuid, UUID user_uuid, Date expires, String scope, String token_type) {
-        byte[] currentTimeBytes = ByteBuffer.allocate(Long.BYTES).putLong(System.currentTimeMillis()).array();
-        this.access_token = Hex.encodeHexString(SecurityUtil.addAll(SecurityUtil.getSecureBytes(16), currentTimeBytes));
+        this.access_token = UUIDs.random();
         this.client_uuid = client_uuid;
         this.user_uuid = user_uuid;
         this.expires = expires;
         this.scope = scope;
         this.token_type = token_type;
+        this.created = new Date();
     }
 
-    public String getAccess_token() {
+    public UUID getAccess_token() {
         return access_token;
     }
 
-    public void setAccess_token(String access_token) {
+    public void setAccess_token(UUID access_token) {
         this.access_token = access_token;
     }
 

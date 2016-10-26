@@ -25,38 +25,44 @@ package ie.gmit.socializer.services.chat.model;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.Mapper;
+import com.datastax.driver.mapping.Mapper.Option;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.driver.mapping.Result;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class OauthTokenMapper implements Mappable<OauthToken>{
+public class OauthTokenMapper implements Mappable<OauthToken> {
+
     protected Mapper<OauthToken> mapper;
     protected Session session;
     protected MappingManager mappingManager;
     protected final String KEY_SPACE;
-    
+
     public OauthTokenMapper(Session session, final String keySpace) {
         this.KEY_SPACE = keySpace;
         this.session = session;
         this.mappingManager = new MappingManager(session);
         initializeMapper();
     }
-    
-    protected final void initializeMapper(){
+
+    protected final void initializeMapper() {
         mapper = mappingManager.mapper(OauthToken.class);
     }
-    
+
     @Override
     public boolean createEntry(OauthToken model) {
-        try{
-            mapper.save(model);
+        try {
+            long ttl = getDateDiff(new Date(), model.getExpires(), TimeUnit.SECONDS);
+            mapper.save(model, Option.ttl((int) ttl));
             return true;
-        }catch(Exception e){
+        } catch (Exception e) {
             Logger.getLogger(OauthTokenMapper.class.getName()).log(Level.SEVERE, "Could not create cassandra entry - oauth_token", e);
         }
         return false;
@@ -64,14 +70,15 @@ public class OauthTokenMapper implements Mappable<OauthToken>{
 
     @Override
     public void createEntryAsync(OauthToken model) {
-        mapper.saveAsync(model);
+        long ttl = getDateDiff(new Date(), model.getExpires(), TimeUnit.SECONDS);
+        mapper.saveAsync(model, Option.ttl((int)ttl));
     }
 
     @Override
     public BoundStatement getDeleteBoundStatement(UUID entryUUID) {
         PreparedStatement prepared = session.prepare(
-                            String.format("delete from %s.oauth2_data where access_token = ?", KEY_SPACE)
-                              );
+                String.format("delete from %s.oauth2_data where access_token = ?", KEY_SPACE)
+        );
         return prepared.bind(entryUUID);
     }
 
@@ -82,39 +89,88 @@ public class OauthTokenMapper implements Mappable<OauthToken>{
             return true;
         } catch (Exception e) {
             //This is only possible if there is no connection
-            Logger.getLogger(MessageSessionMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - oauth_token", e);
+            Logger.getLogger(OauthTokenMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - oauth_token", e);
         }
         return false;
     }
 
     @Override
     public boolean deleteEntryAsync(UUID entryUUID) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            session.executeAsync(getDeleteBoundStatement(entryUUID));
+            return true;
+        } catch (Exception e) {
+            //This is only possible if there is no connection
+            Logger.getLogger(OauthTokenMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete async - oauth_token", e);
+        }
+        return false;
     }
 
     @Override
     public boolean deleteEntries(List<UUID> entryUUIDs, String keyColumnName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        PreparedStatement prepared = session.prepare(
+                String.format("delete from %s.oauth2_data where %s in ?", KEY_SPACE, keyColumnName)
+        );
+        BoundStatement bound = prepared.bind(entryUUIDs);
+
+        try {
+            session.execute(bound);
+            return true;
+        } catch (Exception e) {
+            Logger.getLogger(OauthTokenMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete multiple - oauth_token", e);
+        }
+
+        return false;
     }
 
     @Override
     public boolean executeQuery(String query) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            session.execute(query);
+            return true;
+        } catch (Exception e) {
+            Logger.getLogger(OauthTokenMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra query - oauth_token", e);
+        }
+
+        return false;
     }
 
     @Override
     public void updateEntry(OauthToken model) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        long ttl = getDateDiff(new Date(), model.getExpires(), TimeUnit.SECONDS);
+        mapper.saveAsync(model, Option.ttl((int) ttl));
     }
 
     @Override
     public OauthToken getEntry(UUID entryUUID) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        PreparedStatement prepared = session.prepare(
+                String.format("select * from %s.oauth2_data where access_token = ?", KEY_SPACE)
+        );
+        
+        BoundStatement bound = prepared.bind(entryUUID);
+        ResultSet results = session.execute(bound);
+
+        return mapper.map(results).one();
     }
 
     @Override
     public Result<OauthToken> getMultiple(BoundStatement bound) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ResultSet results = session.execute(bound);
+        return mapper.map(results);
     }
-    
+
+    /**
+     * Get a diff between two dates
+     * 
+     * Source: http://stackoverflow.com/questions/1555262/calculating-the-difference-between-two-java-date-instances
+     * 
+     * @param date1 the oldest date
+     * @param date2 the newest date
+     * @param timeUnit the unit in which you want the diff
+     * @return the diff value, in the provided unit
+     */
+    public static long getDateDiff(Date date1, Date date2, TimeUnit timeUnit) {
+        long diffInMillies = date2.getTime() - date1.getTime();
+        return timeUnit.convert(diffInMillies, TimeUnit.MILLISECONDS);
+    }
 }
