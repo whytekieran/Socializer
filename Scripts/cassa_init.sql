@@ -136,7 +136,7 @@ with replication = {'class': 'NetworkTopologyStrategy', 'replication_factor' : 3
 
  -- Oauth2 data 
  create table app_data.oauth2_data(
-	access_token text,
+	access_token uuid,
 	client_uuid uuid,
 	user_uuid uuid,
 	expires timestamp,
