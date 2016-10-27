@@ -32,11 +32,11 @@ public class CassandraConnector {
     /**
      * Initialize the cluster with default pooling
      * 
-     * @param columnFamily - the column family to connect to
+     * @param keySpace - the key space to connect to
      * @return initialized cluster
      * @todo: use config file for connection points
      */
-    public static Cluster initalizeConnection(String columnFamily){
+    public static Cluster initalizeConnection(String keySpace){
         PoolingOptions poolingOptions = new PoolingOptions();
         poolingOptions.setCoreConnectionsPerHost(HostDistance.LOCAL,  4)
                         .setMaxConnectionsPerHost( HostDistance.LOCAL, 10);
@@ -46,7 +46,7 @@ public class CassandraConnector {
                             .withPoolingOptions(poolingOptions)
                             .build();
         
-        cluster.connect(columnFamily);
+        cluster.connect(keySpace);
         
         return cluster;
     }

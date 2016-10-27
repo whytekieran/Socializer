@@ -26,6 +26,13 @@ package ie.gmit.socializer.services.chat.protocol;
 import java.util.List;
 
 public class ActionMessage extends SocketMessage{
+    /**
+     * Action breakdown:
+     * 200-299 >> create
+     *      210 >> create-message-session
+     * 300-399 >> update
+     * 
+     */
     private int action;// 200-299 >> create, consider using string
     private List<String> action_values;
 

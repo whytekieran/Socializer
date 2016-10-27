@@ -86,6 +86,7 @@ public class MessageMapper implements Mappable<Message> {
      * @param modelable
      */
     public void updateEntry(Message message) {
+        message.setUpdated();
         mapper.saveAsync(message);
     }
 

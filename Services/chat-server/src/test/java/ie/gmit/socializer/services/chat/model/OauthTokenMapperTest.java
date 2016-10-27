@@ -75,7 +75,7 @@ public class OauthTokenMapperTest {
     
     @Before
     public void setUp() {
-        System.out.printf("\nExecuting test for %s class, method test: ", MessageMapper.class.getName());
+        System.out.printf("\nExecuting test for %s class, method test: ", OauthTokenMapper.class.getName());
     }
     
     /**

@@ -145,6 +145,7 @@ public class MessageSessionMapper implements Mappable<MessageSession>{
      * @param ms - MessageSession object
      */
     public void updateEntry(MessageSession ms) {
+        ms.setUpdated();
         mapper.saveAsync(ms);
     }
 

@@ -26,11 +26,8 @@ package ie.gmit.socializer.services.chat.model;
 import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
-import ie.gmit.socializer.services.chat.common.SecurityUtil;
-import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.UUID;
-import org.apache.commons.codec.binary.Hex;
 
 @Table(keyspace = "app_data", name = "oauth2_data",
        caseSensitiveKeyspace = false,
