@@ -23,15 +23,25 @@
  */
 package ie.gmit.socializer.services.chat.protocol;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.mapping.Result;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ie.gmit.socializer.services.chat.model.MessageSession;
+import ie.gmit.socializer.services.chat.model.MessageSessionMapper;
 import ie.gmit.socializer.services.chat.model.OauthToken;
 import ie.gmit.socializer.services.chat.model.OauthTokenMapper;
+import ie.gmit.socializer.services.chat.model.UserSecret;
+import ie.gmit.socializer.services.chat.model.UserSecretMapper;
 import ie.gmit.socializer.services.chat.storage.CassandraConnector;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,6 +52,7 @@ public class IdentificationProtocol {
     private final int ACTION_MESSAGE_MAX = 19; // 10-19
     private final int SESSION_MESSAGE_MAX = 29; // 20-29
     private final String APP_DATA_KS = "app_data";
+    private final String APP_USER_DATA_KS = "app_user_data";
     private final ObjectMapper objectMapper;
     private Cluster cluster;
     private OauthTokenMapper otm;
@@ -114,9 +125,72 @@ public class IdentificationProtocol {
         return convertObjectToString(response);
     }
     
-    protected ActionMessage handleActionMessage(ActionMessage actionMessage, OauthToken token){
+    protected SocketMessage handleActionMessage(ActionMessage actionMessage, OauthToken token){
+        SocketMessage response = null;
+        switch(actionMessage.getAction()){
+            case ActionMessage.CREATE_MESSAGE_SESSION:
+                /**
+                 * At this stage if all is correct, the public keys are available this makes the session key generation possible server side
+                 * Not too cool :( should break into client steps
+                 */
+                try{
+                    response = new SocketMessage();
+                }catch(Exception ex){
+                    //Pass the message onto client
+                    response = new ErrorMessage("", 400, ex.getMessage(), actionMessage.getState(), VERSION);
+                }
+                break;
+        }
         
-        return actionMessage;
+        return response;
+    }
+    
+    protected UUID createSessionMessage(ActionMessage actionMessage) throws Exception{
+        List<UUID> userUuids = convertStringListToUUIDList(actionMessage.getAction_values());
+        if(null != userUuids){
+            try(Session currentSession = cluster.newSession()){
+                UserSecretMapper usm = new UserSecretMapper(cluster.newSession(), APP_USER_DATA_KS);
+                PreparedStatement prepared = currentSession.prepare(String.format("select * from %s.user_secret where user_uuid in ?", APP_USER_DATA_KS));
+        
+                BoundStatement bound = prepared.bind(userUuids);
+                List<UserSecret> users = usm.getMultiple(bound).all();
+                if(users.size() == userUuids.size()){
+                    //create entry without crypto
+                    MessageSession ms = new MessageSession(userUuids, "Chat session", 1);
+                    MessageSessionMapper msm = new MessageSessionMapper(currentSession, APP_USER_DATA_KS);
+                    boolean created = msm.createEntry(ms);
+                    if(created){
+                        return ms.getMsession_uuid();
+                    }else{
+                        //should try async
+                        throw new Exception("Could not create message session");
+                    }
+                }else{
+                    throw new Exception("Not all users have secrets");
+                }
+            }
+        }else{
+            throw new Exception("Invalid uuid(s) passed ");
+        }
+    }
+    
+    /**
+     * Convert String uuids to UUID objects
+     * 
+     * @param strUuidList - list of string uuids
+     * @return populated list with UUID objects
+     */
+    protected List<UUID> convertStringListToUUIDList(List<String> strUuidList){
+        List<UUID> user_uuids = new ArrayList<>();
+        for(String sUuid : strUuidList){
+            UUID user_uuid = convertStringToUUID(sUuid);
+            if(null != user_uuid)
+                user_uuids.add(user_uuid);
+            else
+                return null;
+        }
+        
+        return user_uuids;
     }
     
     protected AuthenticationMessage handleAthenticationMessage(AuthenticationMessage authMessage, OauthToken token){
@@ -142,9 +216,16 @@ public class IdentificationProtocol {
      * @return initialized token if valid
      */
     protected OauthToken validateToken(String token){
+        UUID uuid = convertStringToUUID(token);
+        if(null != token)
+            return otm.getEntry(uuid);
+        else 
+            return null;
+    }
+    
+    protected UUID convertStringToUUID(String token){
         try{
-            UUID accessToken = UUID.fromString(token);
-            return otm.getEntry(accessToken);
+            return UUID.fromString(token);
         }catch(Exception ex){
             //Invalid format
             Logger.getLogger(IdentificationProtocol.class.getName()).log(Level.SEVERE, "Could not parse Auth token - validateToken", ex);

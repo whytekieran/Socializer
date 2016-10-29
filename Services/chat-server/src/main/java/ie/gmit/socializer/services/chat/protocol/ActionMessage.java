@@ -30,11 +30,15 @@ public class ActionMessage extends SocketMessage{
      * Action breakdown:
      * 200-299 >> create
      *      210 >> create-message-session
+     *      220 >> create-message-session-key
      * 300-399 >> update
      * 
      */
+    public static final int CREATE_MESSAGE_SESSION = 210;
+    
     private int action;// 200-299 >> create, consider using string
     private List<String> action_values;
+    private Object result;
 
     public int getAction() {
         return action;

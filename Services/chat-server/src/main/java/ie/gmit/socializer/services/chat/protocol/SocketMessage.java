@@ -27,6 +27,7 @@ public class SocketMessage {
     private int version; // The protocol version
     private String token; // The bearer token from authorizitation
     private int state; //The protocol state (0-9>>init, 10-19>>auth, 20-29>>action message, 30-39>>session message)
+    private int status;//The status of the request in http terms (200 > ok etc.)
     
     public int getVersion() {
         return version;
@@ -51,6 +52,12 @@ public class SocketMessage {
     public void setState(int state) {
         this.state = state;
     }
-    
-    
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
 }
