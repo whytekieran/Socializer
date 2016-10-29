@@ -22,8 +22,8 @@ import ie.gmit.socializer.SocializerAPI.utilities.Mappable;
 public class UserMapper implements Mappable<User> {
 
 	private Mapper<User> mapper;
-    private Session session;
-    private MappingManager mappingManager;
+    private final Session session;
+    private final MappingManager mappingManager;
     private final String KEY_SPACE;
 	
     //Constructor accepts the current session and the key space (column family) and the Cassandra database.
@@ -35,7 +35,7 @@ public class UserMapper implements Mappable<User> {
         initializeUserMapper();
 	}
 	
-	private final void initializeUserMapper() {
+	private void initializeUserMapper() {
         mapper = mappingManager.mapper(User.class);
 	}
 	
@@ -135,22 +135,41 @@ public class UserMapper implements Mappable<User> {
 	@Override
 	public void updateEntry(User model) {
 		//If uuid or any other index matches the mapper will simply do the update for us.
-		mapper.saveAsync(model);
+		mapper.save(model);
 	}
 	
 	public User getUserBasedOnEmail(String email){
 		
 		PreparedStatement prepared = session.prepare(
                 String.format("select * from %s.user where email=?", KEY_SPACE)
-        );
+            );
         
-		BoundStatement bound = prepared.bind(email);
-        ResultSet results = session.execute(bound);
+            BoundStatement bound = prepared.bind(email);
+            ResultSet results = session.execute(bound);
 
-        //gets the next one...but all emails for users are unique hence there will only be one user 
-        //here to return because query above is based on email
-        return mapper.map(results).one();
+            //gets the next one...but all emails for users are unique hence there will only be one user 
+            //here to return because query above is based on email
+            return mapper.map(results).one();
 	}
+        
+        public boolean deleteUserBasedOnEmailAndId(String email, UUID user_uuid){
+            
+            PreparedStatement prepared = session.prepare(
+                String.format("delete from %s.user where email=? and user_uuid=?", KEY_SPACE)
+            );
+            
+            BoundStatement bound = prepared.bind(email, user_uuid);
+            
+            try{
+                session.execute(bound);
+                return true;
+            }
+            catch(Exception e){
+                 Logger.getLogger(UserMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra query - delete user", e.getMessage());
+            }
+            
+            return false;
+        }
 
 	@Override
 	//Get a particular user

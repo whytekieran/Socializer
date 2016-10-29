@@ -3,7 +3,7 @@ package ie.gmit.socializer.SocializerAPI.models;
 import java.util.*;
 
 //import com.datastax.driver.core.TimestampGenerator;
-import com.datastax.driver.core.utils.UUIDs;
+//import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.annotations.ClusteringColumn;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
@@ -36,10 +36,10 @@ public class User {
 	private String address_country;
 	private UUID profile_pic_uuid;
 	private UUID background_pic_uuid;
-	private List<String> workplaces;
-	private List<String> professional_skills;
-	private List<String> lived_in;
-	private List<UUID> connections;
+	private List<String> workplaces = new ArrayList<>();
+	private List<String> professional_skills = new ArrayList<>();
+	private List<String> lived_in = new ArrayList<>();
+	private List<UUID> connections = new ArrayList<>();
 	private Date created; 
 	private Date updated;		
 	
@@ -50,87 +50,66 @@ public class User {
 	{
 		
 	}
-		
-	//Constructor new instance of a user - can overload constructor later for possible user update
-	/*public User(String email, String firstname, String surname, String dob, String phone_number, 
-			    String address1, String address2, String address3, String address_city, 
-			    String address_county, String address_country) {
-		
-		this.user_uuid = UUIDs.random();
-		this.email = email;
-		this.firstname = firstname;
-		this.surname = surname;
-		this.address_1 = address1;
-		this.address_2 = address2;
-		this.address_3 = address3;
-		this.address_city = address_city;
-		this.address_county = address_county;
-		this.address_country = address_country;
-		this.phone_number = phone_number;
-		this.created = new Date();
-		this.updated = new Date();
-		this.dob = dob;
-	}*/
 
 	//Getters and Setters
 	public Date getCreated() {
-		return created;
+            return created;
 	}
 
 	public void setCreated(Date created) {
-		this.created = created;
+            this.created = created;
 	}
 	
 	public String getPhone_number() {
-		return phone_number;
+            return phone_number;
 	}
 
 	public void setPhone_number(String phone_number) {
-		this.phone_number = phone_number;
+            this.phone_number = phone_number;
 	}
 
 	public String getAddress_city() {
-		return address_city;
+            return address_city;
 	}
 
 	public void setAddress_city(String address_city) {
-		this.address_city = address_city;
+            this.address_city = address_city;
 	}
 
 	public String getAddress_county() {
-		return address_county;
+            return address_county;
 	}
 
 	public void setAddress_county(String address_county) {
-		this.address_county = address_county;
+            this.address_county = address_county;
 	}
 
 	public String getAddress_country() {
-		return address_country;
+            return address_country;
 	}
 
 	public void setAddress_country(String address_country) {
-		this.address_country = address_country;
+            this.address_country = address_country;
 	}
 	
 	public String getAddress_1() {
-		return address_1;
+            return address_1;
 	}
 
 	public void setAddress_1(String address_1) {
-		this.address_1 = address_1;
+            this.address_1 = address_1;
 	}
 
 	public String getAddress_2() {
-		return address_2;
+            return address_2;
 	}
 
 	public void setAddress_2(String address_2) {
-		this.address_2 = address_2;
+            this.address_2 = address_2;
 	}
 
 	public String getAddress_3() {
-		return address_3;
+            return address_3;
 	}
 
 	public void setAddress_3(String address_3) {
