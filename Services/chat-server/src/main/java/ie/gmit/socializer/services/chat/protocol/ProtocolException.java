@@ -18,49 +18,42 @@
  * @author Peter Nagy - peternagy.ie
  * @since October 2016
  * @version 0.1
- * @description SessionMessage - Short description
+ * @description ProtocolException - Custom exception for protocol events
  * @package ie.gmit.socializer.services.chat.protocol
  */
 package ie.gmit.socializer.services.chat.protocol;
 
-public class SessionMessage extends SocketMessage {
-    //Regular message in existing session
-    private String skey;// The session key
-    //Every session
-    private String session;// The messsage session id
-    private String msgbody;// The message body
-    private String msgid;// The message id
+public class ProtocolException extends Exception{
+    private int statusCode;
+    private String source;
 
-    public String getSkey() {
-        return skey;
+    public ProtocolException(int statusCode, String source, String message) {
+        super(message);
+        this.statusCode = statusCode;
+        this.source = source;
     }
 
-    public void setSkey(String skey) {
-        this.skey = skey;
+    public ProtocolException(int statusCode, String source, String message, Throwable cause) {
+        super(message, cause);
+        this.statusCode = statusCode;
+        this.source = source;
     }
 
-    public String getSession() {
-        return session;
-    }
-
-    public void setSession(String session) {
-        this.session = session;
-    }
-
-    public String getMsgbody() {
-        return msgbody;
-    }
-
-    public void setMsgbody(String msgbody) {
-        this.msgbody = msgbody;
-    }
-
-    public String getMsgid() {
-        return msgid;
-    }
-
-    public void setMsgid(String msgid) {
-        this.msgid = msgid;
-    }
     
+    
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public void setStatusCode(int statusCode) {
+        this.statusCode = statusCode;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
 }

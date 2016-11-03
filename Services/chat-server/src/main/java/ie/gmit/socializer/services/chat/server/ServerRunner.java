@@ -103,7 +103,7 @@ public class ServerRunner {
             System.out.println(errorMessage);//show an extra message before help
         
         String helpHeader = "Socializer chat server cli options\n=======================================";
-        String helpFooter = "\nExamples:\n=======================================\nRun service: -i 127.0.0.1 -p 81 -s ws\nRun in debug mode service: -i 127.0.0.1 -p 81 -s ws -d\nRun in verbose mode service: -i 127.0.0.1 -p 81 -s ws -v\nRun benchmark test: -i 127.0.0.1 -p 81 -s ws -b\n=======================================\n\n";
+        String helpFooter = "\nExamples:\n=======================================\nRun service: -i 127.0.0.1 -p 8080 -s ws\nRun in debug mode service: -i 127.0.0.1 -p 8080 -s ws -d\nRun in verbose mode service: -i 127.0.0.1 -p 8080 -s ws -v\nRun benchmark test: -i 127.0.0.1 -p 8080 -s ws -b\n=======================================\n\n";
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp("Socializer chat server", helpHeader, availableOptions, helpFooter, true);
     }

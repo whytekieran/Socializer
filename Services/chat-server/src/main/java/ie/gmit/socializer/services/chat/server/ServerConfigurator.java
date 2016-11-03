@@ -40,7 +40,7 @@ import org.java_websocket.server.WebSocketServer;
 
 public class ServerConfigurator {
 
-    protected static final String DEFAULT_LOG_PATH = "/logs";
+    protected static final String DEFAULT_LOG_PATH = "/logs/";
     protected static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     protected static String usedLogPath = "n/a";
     /**

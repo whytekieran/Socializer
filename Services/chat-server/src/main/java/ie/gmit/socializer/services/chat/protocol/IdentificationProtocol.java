@@ -23,39 +23,26 @@
  */
 package ie.gmit.socializer.services.chat.protocol;
 
-import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.mapping.Result;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ie.gmit.socializer.services.chat.model.MessageSession;
-import ie.gmit.socializer.services.chat.model.MessageSessionMapper;
+import ie.gmit.socializer.services.chat.model.DataParseHelper;
 import ie.gmit.socializer.services.chat.model.OauthToken;
 import ie.gmit.socializer.services.chat.model.OauthTokenMapper;
-import ie.gmit.socializer.services.chat.model.UserSecret;
-import ie.gmit.socializer.services.chat.model.UserSecretMapper;
 import ie.gmit.socializer.services.chat.storage.CassandraConnector;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class IdentificationProtocol {
-    private final int VERSION = 100;
-    private final int AUTHENTICATION_MESSAGE_MAX = 9; // 0-9
-    private final int ACTION_MESSAGE_MAX = 19; // 10-19
-    private final int SESSION_MESSAGE_MAX = 29; // 20-29
-    private final String APP_DATA_KS = "app_data";
-    private final String APP_USER_DATA_KS = "app_user_data";
     private final ObjectMapper objectMapper;
     private Cluster cluster;
     private OauthTokenMapper otm;
+    private final DataParseHelper dataParseHelper;
+    private final ActionMessageHandler actionMessageHandler;
+    private final SessionMessageHandler sessionMessageHandler;
     
     public IdentificationProtocol() {
         objectMapper = new ObjectMapper();
@@ -63,6 +50,9 @@ public class IdentificationProtocol {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);//Remove the unknown fields
         
         initializeDataConnection();
+        dataParseHelper = DataParseHelper.getInstance();
+        actionMessageHandler = new ActionMessageHandler( dataParseHelper, cluster);
+        sessionMessageHandler = new SessionMessageHandler(dataParseHelper, cluster);
     }
     
     /**
@@ -72,14 +62,14 @@ public class IdentificationProtocol {
      */
     protected final void initializeDataConnection(){
         if(null == cluster || cluster.isClosed())
-            cluster = CassandraConnector.initalizeConnection(APP_DATA_KS);
+            cluster = CassandraConnector.initalizeConnection(ProtocolConstants.APP_DATA_KS);
         
         if(otm == null)
-            otm = new OauthTokenMapper(cluster.newSession(), APP_DATA_KS);
+            otm = new OauthTokenMapper(cluster.newSession(), ProtocolConstants.APP_DATA_KS);
     }
     
     /**
-     * 
+     * Route socket message to handler
      * @todo: Should check token modification attack (use a hashmap as current connection => key, value => token )
      * 
      * @param jsonMessage
@@ -89,108 +79,40 @@ public class IdentificationProtocol {
         SocketMessage sm = tryParseSocketMessage(jsonMessage, SocketMessage.class);
         int messageState = sm == null ? -1 : sm.getState();
         int msVersion = sm == null ? 99 : sm.getVersion();
-        OauthToken token = sm == null ? null : validateToken(sm.getToken());
+        OauthToken token = sm == null ? null : otm.validateToken(sm.getToken());
         SocketMessage response;
         
         //Use fuzzy-logic
-        if(messageState < 0 || msVersion != VERSION || null == token){
+        if(messageState < 0 || msVersion != ProtocolConstants.VERSION || null == token){
             //Invalid message state
-            response = new ErrorMessage("API.CHAT.PROTOCOL.VERIFICATION", 400, "Invalid message state or structure. Please use js library", messageState, VERSION);
-        }else if(messageState < AUTHENTICATION_MESSAGE_MAX){
+            response = new ErrorMessage("API.CHAT.PROTOCOL.VERIFICATION", 400, "Invalid message state or structure. Please use js library", messageState, ProtocolConstants.VERSION);
+        }else if(messageState < ProtocolConstants.AUTHENTICATION_MESSAGE_MAX){
             AuthenticationMessage authMessage = tryParseSocketMessage(jsonMessage, AuthenticationMessage.class);
             if(null != authMessage){
                 response = handleAthenticationMessage(authMessage, token);
             }else{
-                response = new ErrorMessage("API.CHAT.PROTOCOL.MESSAGE.PARSING", 400, "Invalid message state or structure. Please use js library", messageState, VERSION);
+                response = new ErrorMessage("API.CHAT.PROTOCOL.MESSAGE.PARSING", 400, "Invalid message state or structure. Please use js library", messageState, ProtocolConstants.VERSION);
             }
-        }else if(messageState < ACTION_MESSAGE_MAX){
+        }else if(messageState < ProtocolConstants.ACTION_MESSAGE_MAX){
             ActionMessage actionMessage = tryParseSocketMessage(jsonMessage, ActionMessage.class);
             if(null != actionMessage){
-                response = handleActionMessage(actionMessage, token);
+                response = actionMessageHandler.handleActionMessage(actionMessage, token);
             }else{
-                response = new ErrorMessage("API.CHAT.PROTOCOL.MESSAGE.PARSING", 400, "Invalid message state or structure. Please use js library", messageState, VERSION);  
+                response = new ErrorMessage("API.CHAT.PROTOCOL.MESSAGE.PARSING", 400, "Invalid message state or structure. Please use js library", messageState, ProtocolConstants.VERSION);  
             }
-        }else if(messageState < SESSION_MESSAGE_MAX){
+        }else if(messageState < ProtocolConstants.SESSION_MESSAGE_MAX){
             SessionMessage sessionMessage = tryParseSocketMessage(jsonMessage, SessionMessage.class);
             if(null != sessionMessage){
-                response = handleSessionMessage(sessionMessage, token);
+                response = sessionMessageHandler.handleSessionMessage(sessionMessage, token);
             }else{
-                response = new ErrorMessage("API.CHAT.PROTOCOL.MESSAGE.PARSING", 400, "Invalid message state or structure. Please use js library", messageState, VERSION);
+                response = new ErrorMessage("API.CHAT.PROTOCOL.MESSAGE.PARSING", 400, "Invalid message state or structure. Please use js library", messageState, ProtocolConstants.VERSION);
             }
         }else{
             //Can not idetify
-            response = new ErrorMessage("API.CHAT.PROTOCOL.VERIFICATION", 400, "Invalid message state", messageState, VERSION);
+            response = new ErrorMessage("API.CHAT.PROTOCOL.VERIFICATION", 400, "Invalid message state", messageState, ProtocolConstants.VERSION);
         }
         
         return convertObjectToString(response);
-    }
-    
-    protected SocketMessage handleActionMessage(ActionMessage actionMessage, OauthToken token){
-        SocketMessage response = null;
-        switch(actionMessage.getAction()){
-            case ActionMessage.CREATE_MESSAGE_SESSION:
-                /**
-                 * At this stage if all is correct, the public keys are available this makes the session key generation possible server side
-                 * Not too cool :( should break into client steps
-                 */
-                try{
-                    response = new SocketMessage();
-                }catch(Exception ex){
-                    //Pass the message onto client
-                    response = new ErrorMessage("", 400, ex.getMessage(), actionMessage.getState(), VERSION);
-                }
-                break;
-        }
-        
-        return response;
-    }
-    
-    protected UUID createSessionMessage(ActionMessage actionMessage) throws Exception{
-        List<UUID> userUuids = convertStringListToUUIDList(actionMessage.getAction_values());
-        if(null != userUuids){
-            try(Session currentSession = cluster.newSession()){
-                UserSecretMapper usm = new UserSecretMapper(cluster.newSession(), APP_USER_DATA_KS);
-                PreparedStatement prepared = currentSession.prepare(String.format("select * from %s.user_secret where user_uuid in ?", APP_USER_DATA_KS));
-        
-                BoundStatement bound = prepared.bind(userUuids);
-                List<UserSecret> users = usm.getMultiple(bound).all();
-                if(users.size() == userUuids.size()){
-                    //create entry without crypto
-                    MessageSession ms = new MessageSession(userUuids, "Chat session", 1);
-                    MessageSessionMapper msm = new MessageSessionMapper(currentSession, APP_USER_DATA_KS);
-                    boolean created = msm.createEntry(ms);
-                    if(created){
-                        return ms.getMsession_uuid();
-                    }else{
-                        //should try async
-                        throw new Exception("Could not create message session");
-                    }
-                }else{
-                    throw new Exception("Not all users have secrets");
-                }
-            }
-        }else{
-            throw new Exception("Invalid uuid(s) passed ");
-        }
-    }
-    
-    /**
-     * Convert String uuids to UUID objects
-     * 
-     * @param strUuidList - list of string uuids
-     * @return populated list with UUID objects
-     */
-    protected List<UUID> convertStringListToUUIDList(List<String> strUuidList){
-        List<UUID> user_uuids = new ArrayList<>();
-        for(String sUuid : strUuidList){
-            UUID user_uuid = convertStringToUUID(sUuid);
-            if(null != user_uuid)
-                user_uuids.add(user_uuid);
-            else
-                return null;
-        }
-        
-        return user_uuids;
     }
     
     protected AuthenticationMessage handleAthenticationMessage(AuthenticationMessage authMessage, OauthToken token){
@@ -200,38 +122,6 @@ public class IdentificationProtocol {
                 //else ignore (possible smart ass)
         
         return authMessage;
-    }
-    
-    protected SessionMessage handleSessionMessage(SessionMessage sessionMessage, OauthToken token){
-        return sessionMessage;
-    }
-    
-    /**
-     * Validate ouath token against data
-     * 
-     * Note: this should be initialized from the core application
-     * 
-     * @todo: implement caching push to cache as <Token, User> with ttl caclulated on token
-     * @param token - the string token
-     * @return initialized token if valid
-     */
-    protected OauthToken validateToken(String token){
-        UUID uuid = convertStringToUUID(token);
-        if(null != token)
-            return otm.getEntry(uuid);
-        else 
-            return null;
-    }
-    
-    protected UUID convertStringToUUID(String token){
-        try{
-            return UUID.fromString(token);
-        }catch(Exception ex){
-            //Invalid format
-            Logger.getLogger(IdentificationProtocol.class.getName()).log(Level.SEVERE, "Could not parse Auth token - validateToken", ex);
-        }
-        
-        return null;
     }
     
     /**

@@ -48,6 +48,7 @@ public class MessageSession{
 
     /**
      * Constructor for new message session with auto generated fields  
+     * 
      * @param user_uuid_list - the list of participiants
      * @param name - the session name
      * @param permission - the visibility & permission of extending group
@@ -56,6 +57,9 @@ public class MessageSession{
         this.user_uuid_list = user_uuid_list;
         this.name = name;
         this.permission = permission;
+        msession_uuid = UUIDs.random();
+        created = new Date();
+        updated = new Date();
     }
     
     /**
@@ -144,5 +148,40 @@ public class MessageSession{
      */
     public void setUpdated() {
         this.updated = new Date(System.currentTimeMillis());
+    }
+    
+    /**
+     * Check if user is in message session
+     * @param userUUID
+     * @return 
+     */
+    public boolean containsUser(UUID userUUID){
+        return user_uuid_list.contains(userUUID);
+    }
+    
+    /**
+     * Add user to users
+     * @param userUUID
+     * @return 
+     */
+    public boolean addUser(UUID userUUID){
+        if(!user_uuid_list.contains(userUUID))
+            return user_uuid_list.add(userUUID);
+        else
+            return true;
+    }
+    
+    
+    /**
+     * Remove user from session
+     * 
+     * @param userUUID
+     * @return 
+     */
+    public boolean removeUser(UUID userUUID){
+        if(user_uuid_list.contains(userUUID))
+            return user_uuid_list.remove(userUUID);
+        else
+            return true;
     }
 }

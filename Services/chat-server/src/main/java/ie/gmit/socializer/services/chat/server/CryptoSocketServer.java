@@ -23,11 +23,8 @@
  */
 package ie.gmit.socializer.services.chat.server;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ie.gmit.socializer.services.chat.log.LogFormatter;
 import ie.gmit.socializer.services.chat.protocol.IdentificationProtocol;
-import ie.gmit.socializer.services.chat.protocol.SocketMessage;
 import java.net.InetSocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;

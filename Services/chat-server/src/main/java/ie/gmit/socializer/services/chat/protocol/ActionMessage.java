@@ -38,7 +38,7 @@ public class ActionMessage extends SocketMessage{
     
     private int action;// 200-299 >> create, consider using string
     private List<String> action_values;
-    private Object result;
+    private String result;
 
     public int getAction() {
         return action;
@@ -54,5 +54,13 @@ public class ActionMessage extends SocketMessage{
 
     public void setAction_values(List<String> action_values) {
         this.action_values = action_values;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public void setResult(String result) {
+        this.result = result;
     }
 }

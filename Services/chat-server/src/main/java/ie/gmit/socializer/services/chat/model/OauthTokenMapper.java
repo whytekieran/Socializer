@@ -44,11 +44,13 @@ public class OauthTokenMapper implements Mappable<OauthToken> {
     protected Session session;
     protected MappingManager mappingManager;
     protected final String KEY_SPACE;
+    protected final DataParseHelper dataParseHelper;
 
     public OauthTokenMapper(Session session, final String keySpace) {
         this.KEY_SPACE = keySpace;
         this.session = session;
         this.mappingManager = new MappingManager(session);
+        dataParseHelper = DataParseHelper.getInstance();
         initializeMapper();
     }
 
@@ -159,6 +161,23 @@ public class OauthTokenMapper implements Mappable<OauthToken> {
         return mapper.map(results);
     }
 
+    /**
+     * Validate ouath token against data
+     * 
+     * Note: this should be initialized from the core application
+     * 
+     * @todo: implement caching push to cache as <Token, User> with ttl caclulated on token
+     * @param token - the string token
+     * @return initialized token if valid
+     */
+    public OauthToken validateToken(String token){
+        UUID uuid = dataParseHelper.convertStringToUUID(token);
+        if(null != token)
+            return getEntry(uuid);
+        else 
+            return null;
+    }
+    
     /**
      * Get a diff between two dates
      * 
