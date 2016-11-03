@@ -25,7 +25,7 @@ package ie.gmit.socializer.services.chat.protocol;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import ie.gmit.socializer.services.chat.model.DataParseHelper;
+import ie.gmit.socializer.services.chat.common.DataParseHelper;
 import ie.gmit.socializer.services.chat.model.Message;
 import ie.gmit.socializer.services.chat.model.MessageMapper;
 import ie.gmit.socializer.services.chat.model.MessageSession;
@@ -33,9 +33,11 @@ import ie.gmit.socializer.services.chat.model.MessageSessionMapper;
 import ie.gmit.socializer.services.chat.model.OauthToken;
 import java.util.UUID;
 
-public class SessionMessageHandler {
+public class SessionMessageHandler implements Commandable{
     private final DataParseHelper dataParseHelper;
     private final Cluster cluster;
+    private String message;
+    private OauthToken token;
 
     public SessionMessageHandler(Cluster cluster) {
         this.cluster = cluster;
@@ -46,7 +48,37 @@ public class SessionMessageHandler {
         this.dataParseHelper = dataParseHelper;
         this.cluster = cluster;
     }
+    
+    /**
+     * Initialize the data to handle
+     * 
+     * @param message - the message to parse
+     * @param token - the token for current message
+     */
+    public void initialize(String message, OauthToken token){
+        this.message = message;
+        this.token = token;
+    }
+    
+    /**
+     * Execute the message processing
+     * 
+     * @return the result of execution
+     */
+    public String execute(){
+        SessionMessage sm = dataParseHelper.tryParseJsonString(message, SessionMessage.class);
+        SocketMessage result = handleSessionMessage(sm, token);
+        
+        return dataParseHelper.convertObjectToJsonString(result);
+    }
 
+    /**
+     * Handle session message validation and creation
+     * 
+     * @param sessionMessage
+     * @param token
+     * @return 
+     */
     public SocketMessage handleSessionMessage(SessionMessage sessionMessage, OauthToken token){
         SocketMessage response = null;
         UUID msession_uuid = dataParseHelper.convertStringToUUID(sessionMessage.getSession());

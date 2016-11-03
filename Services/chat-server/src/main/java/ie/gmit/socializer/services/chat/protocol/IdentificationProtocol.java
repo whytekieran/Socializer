@@ -24,35 +24,28 @@
 package ie.gmit.socializer.services.chat.protocol;
 
 import com.datastax.driver.core.Cluster;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ie.gmit.socializer.services.chat.model.DataParseHelper;
+import ie.gmit.socializer.services.chat.common.DataParseHelper;
+import ie.gmit.socializer.services.chat.log.LogFormatter;
 import ie.gmit.socializer.services.chat.model.OauthToken;
 import ie.gmit.socializer.services.chat.model.OauthTokenMapper;
+import ie.gmit.socializer.services.chat.model.UserSecretMapper;
 import ie.gmit.socializer.services.chat.storage.CassandraConnector;
-import java.io.IOException;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class IdentificationProtocol {
-    private final ObjectMapper objectMapper;
     private Cluster cluster;
     private OauthTokenMapper otm;
+    private UserSecretMapper usm;
     private final DataParseHelper dataParseHelper;
-    private final ActionMessageHandler actionMessageHandler;
-    private final SessionMessageHandler sessionMessageHandler;
+    
+    private MessageCommand messageCommand;
     
     public IdentificationProtocol() {
-        objectMapper = new ObjectMapper();
-        objectMapper.setSerializationInclusion(Include.NON_NULL);//Avoid generating null values
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);//Remove the unknown fields
-        
         initializeDataConnection();
         dataParseHelper = DataParseHelper.getInstance();
-        actionMessageHandler = new ActionMessageHandler( dataParseHelper, cluster);
-        sessionMessageHandler = new SessionMessageHandler(dataParseHelper, cluster);
+        messageCommand = MessageCommand.getInstance(cluster);
     }
     
     /**
@@ -66,6 +59,63 @@ public class IdentificationProtocol {
         
         if(otm == null)
             otm = new OauthTokenMapper(cluster.newSession(), ProtocolConstants.APP_DATA_KS);
+        
+        if(usm == null)
+            usm = new UserSecretMapper(cluster.newSession(), ProtocolConstants.APP_USER_DATA_KS);
+    }
+    
+    /**
+     * Validate token by secret
+     * 
+     * @param tokenUUID
+     * @return 
+     */
+    public OauthToken getToken(UUID tokenUUID){
+        return otm.getEntry(tokenUUID);
+    }
+    
+    /**
+     * Identify user based on auth toke
+     * 
+     * @param strTokenUUID
+     * @return 
+     */
+    public UUID identifyUser(String strTokenUUID){
+        UUID tokenUUID = dataParseHelper.convertStringToUUID(strTokenUUID);
+        if(tokenUUID != null){
+            OauthToken token = getToken(tokenUUID);
+            if(token != null){
+                return token.getUser_uuid();
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get protocol connection error message
+     * 
+     * @param message
+     * @return 
+     */
+    public String getConnectionErrorMessage(String message){
+        return dataParseHelper.convertObjectToJsonString(
+                new ErrorMessage("API.CHAT.SERVER", 400, message, -1, ProtocolConstants.VERSION));
+    }
+    
+    /**
+     * Send welcome message
+     * 
+     * @param message
+     * @return 
+     */
+    public String getConnectionWelcomMessage(String message){
+        return dataParseHelper.convertObjectToJsonString(
+                new SocketMessage(){{
+                    setState(100);
+                    setStatus(200);
+                    setVersion(ProtocolConstants.VERSION);
+                }});
     }
     
     /**
@@ -76,43 +126,40 @@ public class IdentificationProtocol {
      * @return 
      */
     public String routeSocketMessage(final String jsonMessage){
-        SocketMessage sm = tryParseSocketMessage(jsonMessage, SocketMessage.class);
-        int messageState = sm == null ? -1 : sm.getState();
-        int msVersion = sm == null ? 99 : sm.getVersion();
-        OauthToken token = sm == null ? null : otm.validateToken(sm.getToken());
-        SocketMessage response;
-        
-        //Use fuzzy-logic
-        if(messageState < 0 || msVersion != ProtocolConstants.VERSION || null == token){
-            //Invalid message state
-            response = new ErrorMessage("API.CHAT.PROTOCOL.VERIFICATION", 400, "Invalid message state or structure. Please use js library", messageState, ProtocolConstants.VERSION);
-        }else if(messageState < ProtocolConstants.AUTHENTICATION_MESSAGE_MAX){
-            AuthenticationMessage authMessage = tryParseSocketMessage(jsonMessage, AuthenticationMessage.class);
-            if(null != authMessage){
-                response = handleAthenticationMessage(authMessage, token);
-            }else{
-                response = new ErrorMessage("API.CHAT.PROTOCOL.MESSAGE.PARSING", 400, "Invalid message state or structure. Please use js library", messageState, ProtocolConstants.VERSION);
-            }
-        }else if(messageState < ProtocolConstants.ACTION_MESSAGE_MAX){
-            ActionMessage actionMessage = tryParseSocketMessage(jsonMessage, ActionMessage.class);
-            if(null != actionMessage){
-                response = actionMessageHandler.handleActionMessage(actionMessage, token);
-            }else{
-                response = new ErrorMessage("API.CHAT.PROTOCOL.MESSAGE.PARSING", 400, "Invalid message state or structure. Please use js library", messageState, ProtocolConstants.VERSION);  
-            }
-        }else if(messageState < ProtocolConstants.SESSION_MESSAGE_MAX){
-            SessionMessage sessionMessage = tryParseSocketMessage(jsonMessage, SessionMessage.class);
-            if(null != sessionMessage){
-                response = sessionMessageHandler.handleSessionMessage(sessionMessage, token);
-            }else{
-                response = new ErrorMessage("API.CHAT.PROTOCOL.MESSAGE.PARSING", 400, "Invalid message state or structure. Please use js library", messageState, ProtocolConstants.VERSION);
-            }
-        }else{
-            //Can not idetify
-            response = new ErrorMessage("API.CHAT.PROTOCOL.VERIFICATION", 400, "Invalid message state", messageState, ProtocolConstants.VERSION);
+        try{
+            SocketMessage socketMessage = validateMessage(jsonMessage);
+            OauthToken token = otm.validateToken(socketMessage.getToken());
+            if(token == null) throw new ProtocolException(404, "API.CHAT.VALIDATION.TOKEN", "Token not found");
+            
+            Commandable message = messageCommand.newCommandable(socketMessage.getState());
+            message.initialize(jsonMessage, token);
+            
+            return message.execute();
+        }catch(ProtocolException ex){
+            Logger.getLogger(IdentificationProtocol.class.getName()).log(Level.INFO, LogFormatter.addLineMessages(false, "Socket message error: " +  ex.getSource() + ":" + ex));
+            return dataParseHelper.convertObjectToJsonString(new ErrorMessage(ex.getSource(), ex.getStatusCode(), ex.getMessage(), -1, ProtocolConstants.VERSION));
         }
-        
-        return convertObjectToString(response);
+    }
+    
+    /**
+     * Validate socket message
+     * 
+     * @param message - the json message string
+     * @return initialized socket message
+     * 
+     * @throws ie.gmit.socializer.services.chat.protocol.ProtocolException
+     */
+    protected SocketMessage validateMessage(String message) throws ProtocolException{
+        SocketMessage socketMessage = dataParseHelper.tryParseJsonString(message, SocketMessage.class);
+        if(socketMessage == null){
+            throw new ProtocolException(400, "API.CHAR.PROTOCOL.PARSE", "Could not parse message");
+        }else if(socketMessage.getVersion() != ProtocolConstants.VERSION){
+            throw new ProtocolException(400, "API.CHAR.PROTOCOL.PARSE",  "Invalid protocol version");
+        }else if(socketMessage.getToken() == null || dataParseHelper.convertStringToUUID(socketMessage.getToken()) == null){
+            throw new ProtocolException(400, "API.CHAR.PROTOCOL.PARSE", "Invalid auth token - parse error");
+        }else{
+            return socketMessage;
+        }
     }
     
     protected AuthenticationMessage handleAthenticationMessage(AuthenticationMessage authMessage, OauthToken token){
@@ -122,38 +169,5 @@ public class IdentificationProtocol {
                 //else ignore (possible smart ass)
         
         return authMessage;
-    }
-    
-    /**
-     * Try convert socket message json string to object
-     * 
-     * @param <T> - a SocketMessage object to serialize
-     * @param jsonMessage - 
-     * @param type
-     * @return 
-     */
-    private <T extends Object> T tryParseSocketMessage(final String jsonMessage, Class<T> type){
-        try {
-            return objectMapper.readValue(jsonMessage.getBytes("UTF-8"), type);
-        } catch (IOException ex) {
-            Logger.getLogger(IdentificationProtocol.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Try convert object to json string
-     * @param sm
-     * @return 
-     */
-    private String convertObjectToString(SocketMessage sm){
-        try {
-            return objectMapper.writeValueAsString(sm);
-        } catch (JsonProcessingException ex) {
-            Logger.getLogger(IdentificationProtocol.class.getName()).log(Level.SEVERE, "Could not convert protocol message - IdentificationProtocol", ex);
-        }
-        
-        return "";
     }
 }

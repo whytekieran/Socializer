@@ -155,4 +155,14 @@ public class UserSecretMapper implements Mappable<UserSecret>{
         return mapper.map(results);
     }
     
+    /**
+     * Check weather user hash secret
+     * 
+     * @param entryUUID
+     * @return 
+     */
+    public boolean hasUserSecret(UUID entryUUID){
+        return getEntry(entryUUID) != null; 
+    }
+    
 }

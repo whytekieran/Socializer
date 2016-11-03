@@ -21,8 +21,14 @@
  * @description DataParseHelper - Short description
  * @package ie.gmit.socializer.services.chat.model
  */
-package ie.gmit.socializer.services.chat.model;
+package ie.gmit.socializer.services.chat.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ie.gmit.socializer.services.chat.protocol.ErrorMessage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -30,10 +36,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DataParseHelper {
+    private final ObjectMapper objectMapper;
     private static DataParseHelper instance;
 
-    private DataParseHelper() {}
+    private DataParseHelper() {
+        objectMapper = new ObjectMapper();
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);//Avoid generating null values
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);//Remove the unknown fields
+    }
     
+    /**
+     * Get singleton instance of data parser
+     * 
+     * @return initialized Object 
+     */
     public static DataParseHelper getInstance(){
         if(instance == null){
             instance = new DataParseHelper();
@@ -78,4 +94,38 @@ public class DataParseHelper {
         return null;
     }
     
+    /**
+     * Try convert socket message json string to object
+     * 
+     * @param <T> - a SocketMessage object to serialize
+     * @param jsonMessage - 
+     * @param type
+     * @return 
+     */
+    public <T extends Object> T tryParseJsonString(final String jsonMessage, Class<T> type){
+        try {
+            return objectMapper.readValue(jsonMessage.getBytes("UTF-8"), type);
+        } catch (IOException ex) {
+            Logger.getLogger(DataParseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Try convert object to json string
+     * 
+     * @param sm
+     * @return 
+     */
+    public String convertObjectToJsonString(Object sm){
+        try {
+            return objectMapper.writeValueAsString(sm);
+        } catch (JsonProcessingException ex) {
+            //This should not really happen because of strict use
+            Logger.getLogger(DataParseHelper.class.getName()).log(Level.SEVERE, "Could not convert protocol message - DataParseHelper", ex);
+        }
+        
+        return "";
+    }
 }

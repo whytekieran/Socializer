@@ -23,6 +23,7 @@
  */
 package ie.gmit.socializer.services.chat.model;
 
+import ie.gmit.socializer.services.chat.common.DataParseHelper;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
@@ -176,6 +177,16 @@ public class OauthTokenMapper implements Mappable<OauthToken> {
             return getEntry(uuid);
         else 
             return null;
+    }
+    
+    /**
+     * Check if token exists
+     * 
+     * @param token
+     * @return 
+     */
+    public boolean isValidToken(UUID token){
+        return null != getEntry(token);
     }
     
     /**
