@@ -162,8 +162,8 @@ public class TimelineMapper implements Mappable<Timeline> {
 	ResultSet results = session.execute(bound);//Execute the statement and get the result set
 	return mapper.map(results);//Will fetch Timeline entities from result set using their PRIMARY KEY.
     }
-        
-    //public Result<Timeline> getByUserUUID(List<UUID> userUUIDS){
-    //}
-
+    
+    public Result<Timeline> getStarterDashboard(ResultSet rs){
+        return mapper.map(rs);
+    }
 }

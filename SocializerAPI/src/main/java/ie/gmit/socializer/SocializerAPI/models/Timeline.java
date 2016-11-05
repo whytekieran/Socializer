@@ -3,7 +3,6 @@ package ie.gmit.socializer.SocializerAPI.models;
 import java.util.Date;
 import java.util.UUID;
 
-import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.annotations.ClusteringColumn;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
@@ -30,44 +29,11 @@ public class Timeline {
 	private Date created;
 	private Date updated;
 	
-	
 	//Empty constructor needed for the jersey framework.
 	public Timeline()
 	{
 		
 	}
-	
-        //Constructors may be uneeded because jersey will create object for us.
-	//Overloaded constructor for new post
-	/*public Timeline(UUID user_uuid, UUID parent_uuid, UUID album_uuid, String content_data, String content_type,
-			String visibility)
-	{
-		this.user_uuid = user_uuid;
-		this.parrent_uuid = parent_uuid;
-		this.album_uuid = album_uuid;
-		this.content_data = content_data;
-		this.content_type = content_type;
-		this.visibility = visibility;
-		this.post_uuid = UUIDs.random();
-		this.created = new Date();
-		this.updated = new Date();
-		this.like_count = 0;
-		this.unlike_count = 0;
-	}
-	
-	//Overloaded constructor for updated posts 
-	public Timeline(UUID user_uuid, UUID parent_uuid, UUID album_uuid, UUID post_uuid, String content_data, 
-			String content_type, String visibility)
-	{
-		this.user_uuid = user_uuid;
-		this.parrent_uuid = parent_uuid;
-		this.album_uuid = album_uuid;
-		this.content_data = content_data;
-		this.content_type = content_type;
-		this.visibility = visibility;
-		this.post_uuid = post_uuid;
-		this.updated = new Date();
-	}*/
 
 	//Getters and Setters
 	public UUID getPost_uuid() {

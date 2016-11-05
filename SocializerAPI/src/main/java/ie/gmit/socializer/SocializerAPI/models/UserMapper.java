@@ -22,14 +22,14 @@ import ie.gmit.socializer.SocializerAPI.utilities.Mappable;
 public class UserMapper implements Mappable<User> {
 
 	private Mapper<User> mapper;
-    private final Session session;
-    private final MappingManager mappingManager;
-    private final String KEY_SPACE;
+        private final Session session;
+        private final MappingManager mappingManager;
+        private final String KEY_SPACE;
 	
     //Constructor accepts the current session and the key space (column family) and the Cassandra database.
 	public UserMapper(Session session, final String keySpace){
 		
-		this.session = session;
+	this.session = session;
         this.mappingManager = new MappingManager(session);
         KEY_SPACE = keySpace;
         initializeUserMapper();

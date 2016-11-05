@@ -1,0 +1,6 @@
+#surefire
+#Sat Nov 05 10:45:05 GMT 2016
+maven.ext.class.path=/home/ciaran/netbeans-8.2/java/maven-nblib/netbeans-eventspy.jar
+user.dir=/home/ciaran/Project/Socializer/SocializerAPI
+localRepository=/home/ciaran/.m2/repository
+basedir=/home/ciaran/Project/Socializer/SocializerAPI

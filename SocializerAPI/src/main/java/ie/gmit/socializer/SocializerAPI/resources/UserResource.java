@@ -26,7 +26,7 @@ import ie.gmit.socializer.SocializerAPI.models.User;
 import ie.gmit.socializer.SocializerAPI.models.UserLogin;
 import ie.gmit.socializer.SocializerAPI.responseObjects.ResponseWithMessage;
 import ie.gmit.socializer.SocializerAPI.responseObjects.NewConnectionResponse;
-import ie.gmit.socializer.SocializerAPI.responseObjects.UserIdResponse;
+import ie.gmit.socializer.SocializerAPI.responseObjects.IdResponse;
 import ie.gmit.socializer.SocializerAPI.services.UserService;
 import java.util.Date;
 
@@ -49,7 +49,7 @@ public class UserResource {
 			@HeaderParam("Content-Type") String contentTypeValue, 
 			@HeaderParam("Password") String password){
 		
-		UserIdResponse ur;						//Response Object to be converted to JSON
+		IdResponse ur;						//Response Object to be converted to JSON
 		String hashedPassword = uService.hashPassword(password);
 		UUID uuid = uService.createUser(user, hashedPassword);
 
@@ -57,7 +57,7 @@ public class UserResource {
                 
                     try 
                     {
-                        	ur = new UserIdResponse("true", uuid);
+                        	ur = new IdResponse("true", uuid);
                             jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ur);
 			
                         	return Response.status(Status.CREATED)
@@ -68,7 +68,7 @@ public class UserResource {
                     catch (JsonProcessingException e) 
                     {
                             System.out.println(e.getMessage());
-                            ur = new UserIdResponse("false", null);
+                            ur = new IdResponse("false", null);
 			
                             try {
                                 jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ur);
@@ -103,11 +103,11 @@ public class UserResource {
 	@Path("/login")
 	public Response loginUser(UserLogin user, @HeaderParam("Content-Type") String contentTypeValue){
 		
-		UserIdResponse ur;
+		IdResponse ur;
 		UUID uuid = uService.validateUser(user);
 		
 		if(uuid != null){
-			ur = new UserIdResponse("true", uuid);
+			ur = new IdResponse("true", uuid);
 				
 			try {
 			jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ur);
@@ -120,7 +120,7 @@ public class UserResource {
 			}	
 		}
 		else{
-			ur = new UserIdResponse("false", uuid);
+			ur = new IdResponse("false", uuid);
 			try {
 			jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ur);
                         return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -153,7 +153,7 @@ public class UserResource {
 		if(foundUser != null){
 			try {
                             jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(foundUser);	
-                            return Response.status(Status.CREATED)
+                            return Response.status(Status.OK)
 					.entity(jsonResponseString)
 					.header("Content-Type", "application/json")
 					.build();
@@ -241,7 +241,7 @@ public class UserResource {
                 ur = new ResponseWithMessage("true", "You are no longer connected with the user you requested");
                 try {
                     jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ur);
-                    return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    return Response.status(Status.OK)
                                     .entity(jsonResponseString)
                                     .header("Content-Type", "application/json")
                                     .build(); 
@@ -277,15 +277,15 @@ public class UserResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteUser(@PathParam("user_uuid") UUID user_uuid){
             
-                UserIdResponse ur;
+                IdResponse ur;
 		boolean deleted = uService.deleteUser(user_uuid);
                 
 		if(deleted){
-                    ur = new UserIdResponse("true", user_uuid);
+                    ur = new IdResponse("true", user_uuid);
                         
                     try {
                         jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ur);
-                        return Response.status(Status.ACCEPTED)
+                        return Response.status(Status.OK)
                                         .entity(jsonResponseString)
 					.header("Content-Type", "application/json")
 					.build();
@@ -296,7 +296,7 @@ public class UserResource {
 		}
                 else
                 {
-                    ur = new UserIdResponse("false", user_uuid);
+                    ur = new IdResponse("false", user_uuid);
                  
                     try {
                          jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ur);
@@ -328,7 +328,7 @@ public class UserResource {
                 @HeaderParam("Content-Type") String contentTypeValue){
                 
                 ResponseWithMessage rwm;
-                UserIdResponse ur;
+                IdResponse ur;
                 User currentUser = uService.checkIfUserExists(user_uuid);
                 
                 if(currentUser != null){
@@ -348,11 +348,11 @@ public class UserResource {
                     boolean updated = uService.updateUser(currentUser);//Update the user and get back the result.
                 
                     if(updated){
-                            ur = new UserIdResponse("true", user_uuid);
+                            ur = new IdResponse("true", user_uuid);
                             
                             try {
                                 jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ur);
-                                return Response.status(Status.ACCEPTED)
+                                return Response.status(Status.OK)
 						.entity(jsonResponseString)
 						.header("Content-Type", contentTypeValue)
 						.build();
@@ -410,19 +410,46 @@ public class UserResource {
         public Response updateUserField(@PathParam("user_uuid") UUID user_uuid, @HeaderParam("User-Attribute") String userAttribute,
                 User userUpdate){
             
+            ResponseWithMessage response;
             boolean result = uService.updateUserAttribute(user_uuid, userAttribute, userUpdate);
             
             if(result){
-                return Response.status(Status.CREATED)
-                                .entity("Okay all good!!!!")
-                                .header("Content-Type", "text/plain")
+                
+                response = new ResponseWithMessage("true", "User field was updated");
+                
+                try {
+                    jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
+                    return Response.status(Status.OK)
+                                .entity(jsonResponseString)
+                                .header("Content-Type", "application/json")
                                 .build(); 
+                        
+                } 
+                catch (JsonProcessingException ex1) {
+                    System.out.println(ex1.getMessage());
+                }
             }
             else{
-                return Response.status(Status.INTERNAL_SERVER_ERROR)
+                response = new ResponseWithMessage("false", "User field was not updated");
+                
+                try {
+                    jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
+                    return Response.status(Status.INTERNAL_SERVER_ERROR)
+                                .entity(jsonResponseString)
+                                .header("Content-Type", "application/json")
+                                .build(); 
+                        
+                } 
+                catch (JsonProcessingException ex1) {
+                    System.out.println(ex1.getMessage());
+                }
+            }
+            
+            //Default if everything goes wrong
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
                                 .entity("Something went wrong")
                                 .header("Content-Type", "text/plain")
                                 .build(); 
-            }
         }
+
 }
