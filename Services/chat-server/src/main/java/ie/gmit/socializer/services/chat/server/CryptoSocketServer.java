@@ -29,6 +29,7 @@ import ie.gmit.socializer.services.chat.protocol.IdentificationProtocol;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -43,8 +44,8 @@ public class CryptoSocketServer extends WebSocketServer{
     private final boolean IS_DEBUG;
     private final boolean IS_VERBOSE;
     private final IdentificationProtocol protocol;
-    private final ConcurrentHashMap<UUID, List<WebSocket>> userConnectionMap;
-    private final ConcurrentHashMap<WebSocket, UUID> connectionUserMap;
+    private final Map<UUID, List<WebSocket>> userConnectionMap;
+    private final Map<WebSocket, UUID> connectionUserMap;
     private final DataParseHelper dataParseHelper = DataParseHelper.getInstance();
     
     public CryptoSocketServer(InetSocketAddress address){
@@ -86,7 +87,7 @@ public class CryptoSocketServer extends WebSocketServer{
 
     @Override
     public void onClose(WebSocket ws, int i, String string, boolean bln) {
-        removeConnection(ws);
+        removeMapConnection(ws);
         if(IS_DEBUG || IS_VERBOSE)
             Logger.getLogger(CryptoSocketServer.class.getName()).log(Level.INFO, LogFormatter.addLineMessages(false, "Connection closed: " +  ws.getRemoteSocketAddress().getAddress().getHostAddress()));
         
@@ -116,7 +117,6 @@ public class CryptoSocketServer extends WebSocketServer{
         if(userConnectionMap.containsKey(userUUID)){
             connections = userConnectionMap.get(userUUID);
         }else{
-            System.out.println("Added 1");
             connections = new ArrayList<>();
         }
         connections.add(instanceConnection);
@@ -131,10 +131,8 @@ public class CryptoSocketServer extends WebSocketServer{
      */
     protected void removeMapConnection(WebSocket instanceConnection){
         if(connectionUserMap.containsKey(instanceConnection)){
-            System.out.println("Removed 1");
             UUID userUUID = connectionUserMap.get(instanceConnection);
             if(userConnectionMap.containsKey(userUUID)){
-                System.out.println("Removed 2");
                 List<WebSocket> connections = userConnectionMap.get(userUUID);
                 connections.remove(instanceConnection);//O(n) but not to likely to have 10 connections per user
                 if(connections.size() > 0){
@@ -143,7 +141,6 @@ public class CryptoSocketServer extends WebSocketServer{
                     userConnectionMap.remove(userUUID);
                 }
             }
-
             connectionUserMap.remove(instanceConnection);
         }
     }

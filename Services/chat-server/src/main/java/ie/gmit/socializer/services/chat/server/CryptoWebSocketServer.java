@@ -32,7 +32,7 @@ import org.java_websocket.drafts.Draft;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
-public class CryptoWebSocketServer  extends WebSocketServer{
+public abstract class CryptoWebSocketServer  extends WebSocketServer{
 
     public CryptoWebSocketServer() throws UnknownHostException {
     }
@@ -55,26 +55,5 @@ public class CryptoWebSocketServer  extends WebSocketServer{
 
     public CryptoWebSocketServer(InetSocketAddress isa, int i, List<Draft> list, Collection<WebSocket> clctn) {
         super(isa, i, list, clctn);
-    }
-
-    @Override
-    public void onOpen(WebSocket ws, ClientHandshake ch) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onClose(WebSocket ws, int i, String string, boolean bln) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onMessage(WebSocket ws, String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void onError(WebSocket ws, Exception excptn) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
+    }    
 }

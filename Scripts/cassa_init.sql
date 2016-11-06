@@ -8,26 +8,38 @@ create KEYSPACE app_user_data
 with replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};
 
 -- Production configuration
-create KEYSPACE app_user_data
-with replication = {'class': 'NetworkTopologyStrategy', 'replication_factor' : 3}
- and DURABLE_WRITES = true;
+-- create KEYSPACE app_user_data
+-- with replication = {'class': 'NetworkTopologyStrategy', 'replication_factor' : 3}
+-- and DURABLE_WRITES = true;
 
  -- User table
  create table app_user_data.user(
 	user_uuid uuid, email text, password_hash text, hash_secret text, firstname text, surname text, slug text, dob text, phone_number text, address_1 text, address_2 text, address_3 text, address_city text, address_county text, address_country text,
 	address_json text, profile_pic_uuid uuid, background_pic_uuid uuid, workplaces list<text>, professional_skills list<text>, lived_in list<text>, connections list<uuid>,
 	created timestamp, updated timestamp,
-	primary key ((user_uuid), email, slug)
+	primary key ((user_uuid, email), slug)
  );
 
 create index on app_user_data.user (email);
 create index on app_user_data.user (firstname);
 create index on app_user_data.user (surname);
 
--- Timeline table
+-- User secrets
+create table app_user_data.user_secret(
+	user_uuid uuid,
+	secret_hash text,
+	challenge text,
+	iv text,
+	salt text,
+	enc_private_key text,
+	public_key text,
+	created timestamp,
+	updated timestamp,
+	primary key(user_uuid)
+);
 
+-- Timeline table
 create table app_user_data.timeline(
-	post_uuid uuid,
 	user_uuid uuid,
 	parrent_uuid uuid,
 	album_uuid uuid,
@@ -36,12 +48,11 @@ create table app_user_data.timeline(
 	like_count int,
 	unlike_count int,
 	visibility text,
-	created timestamp,
+	created timeuuid,
 	updated timestamp,
-	primary key((post_uuid), created)
+	primary key(user_uuid, created)
 ) with CLUSTERING order by (created desc);
 
-create index on app_user_data.timeline (user_uuid);
 create index on app_user_data.timeline (parrent_uuid);
 create index on app_user_data.timeline (album_uuid);
 
@@ -96,9 +107,9 @@ create KEYSPACE app_data
 with replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};
 
 -- Production configuration
-create KEYSPACE app_data
-with replication = {'class': 'NetworkTopologyStrategy', 'replication_factor' : 3}
- and DURABLE_WRITES = true;
+-- create KEYSPACE app_data
+-- with replication = {'class': 'NetworkTopologyStrategy', 'replication_factor' : 3}
+-- and DURABLE_WRITES = true;
 
  -- user log
  create table app_data.app_user_log(
