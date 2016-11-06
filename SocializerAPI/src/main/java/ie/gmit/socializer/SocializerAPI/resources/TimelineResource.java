@@ -222,7 +222,7 @@ public class TimelineResource {
                 try {
                     
                     //Object with success of true, the timeline list and the start/end records retrieved from the timeline
-                    successResponse = new TimelineResponse("true", timelineList, tp.getCurrentTimelineEnd(), tp.getCurrentTimelineEnd() + 20);
+                    successResponse = new TimelineResponse("true", timelineList, tp.getCurrentTimelineEnd() + 1, tp.getCurrentTimelineEnd() + 20);
                     jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(successResponse);//object to json convert
                     
                     return Response.status(Response.Status.OK)
@@ -260,7 +260,55 @@ public class TimelineResource {
         }
         
         //RETRIEVING NEXT 20 TIMELINE POSTS ON USER DASHBOARD PAGE, PAGINATION
-        //NOPOINT DOING THIS PARTICULAR ENDPOINT UNTIL MINOR DATABASE ISSUE IS RESOLVED BECAUSE CANT BE TESTED PROPERLY.
+        @POST
+        @Path("/getNextProfileTimeline")
+        public Response getSectionDashboardTimeline(TimelinePagination tp){
+            
+            TimelineResponse successResponse;
+            ResponseWithMessage failResponse;
+            List<Timeline> timelineList = tService.getSectionMultipleUserTimelinePosts(tp);
+            
+            if(timelineList.isEmpty() == false){
+                
+                try {
+                    
+                    //Object with success of true, the timeline list and the start/end records retrieved from the timeline
+                    successResponse = new TimelineResponse("true", timelineList, tp.getCurrentTimelineEnd() +1, tp.getCurrentTimelineEnd() + 20);
+                    jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(successResponse);//object to json convert
+                    
+                    return Response.status(Response.Status.OK)
+                                .entity(jsonResponseString)
+				.header("Content-Type", "application/json")
+				.build();
+                } 
+                catch (JsonProcessingException e1) {
+                     System.out.println(e1.getMessage());
+                }
+                
+            }
+            else{
+                try {
+                    
+                    //Object with success of true, the timeline list and the start/end records retrieved from the timeline
+                    failResponse = new ResponseWithMessage("false", "This user has no posts to see :(");
+                    jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(failResponse);//object to json convert
+                    
+                    return Response.status(Response.Status.OK)
+                                .entity(jsonResponseString)
+				.header("Content-Type", "application/json")
+				.build();
+                } 
+                catch (JsonProcessingException e1) {
+                     System.out.println(e1.getMessage());
+                }
+            }
+           
+            //Default if everything goes wrong
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                .entity("Something went wrong")
+                                .header("Content-Type", "text/plain")
+                                .build(); 
+        }
         
         //SETTING LIKE FOR A POST
         @POST

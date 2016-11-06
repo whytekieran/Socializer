@@ -104,7 +104,45 @@ public class TimelineService {
             return returnedPosts;
         }
         
-        //THIS CODE WOULD WORK IF USER_UUID WAS A PK OF THE TIMELINE TABLE....DB STRUCTURE MAY HAVE TO BE CHANGED
+        //THIS CODE WOULD WORK IF USER_UUID WAS A PK OF THE TIMELINE TABLE....DB STRUCTURE MAY HAVE TO BE CHANGED (WILL NEED TESTING)
+        //Get next 20 timeline posts related to the user and all the users connections...used on dashboard timeline when user scrolls to bottom
+        public List<Timeline> getSectionMultipleUserTimelinePosts(TimelinePagination tp){
+            
+            Session session = timelineMapper.getCurrentSession();
+            User currentUser = uService.checkIfUserExists(UUID.fromString(tp.getUser_uuid()));
+            List<UUID> currentUserFriendList = currentUser.getConnections();
+            currentUserFriendList.add(UUID.fromString(tp.getUser_uuid()));//Add his/herself to the list because trying to get first 20 posts including current user
+            
+            String userIds = currentUserFriendList.toString();
+            userIds = userIds.substring(1, userIds.length()-1);
+            //String tester = "7c3764d8-84da-4587-87f8-1e638edc8e63";
+               
+            //System.out.println("IDS  "+userIds);
+            String query = "select * from app_user_data.timeline where user_uuid in ("+userIds+") Limit 20 Allow Filtering";
+                
+            //BoundStatement bound = prepared.bind(currentUserFriendList.toArray());
+            //Result<Timeline> results = timelineMapper.getMultiple(bound);
+            ResultSet results = session.execute(query);
+            Result<Timeline> tl = timelineMapper.getStarterDashboard(results);
+            
+            List<Timeline> returnedPosts = new ArrayList<>();
+            List<Timeline> posts = tl.all();
+            
+            //Only 20 loops maximum....fast
+            for(int i = tp.getCurrentTimelineEnd() + 1; i <= tp.getCurrentTimelineEnd() + 20; ++i){
+                
+                if(i >= posts.size()){
+                    break;
+                }
+                else{
+                    returnedPosts.add(posts.get(i));
+                }
+            }
+                
+            return returnedPosts;
+        }
+        
+        //THIS CODE WOULD WORK IF USER_UUID WAS A PK OF THE TIMELINE TABLE....DB STRUCTURE MAY HAVE TO BE CHANGED (WILL NEED TESTING)
         //Get first 20 timeline posts related to the user and all the users connections...used on dashboard timeline
 	public Result<Timeline> getMultipleUserTimelinePosts(UUID user_uuid){
             Session session = timelineMapper.getCurrentSession();
