@@ -9,8 +9,8 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.utils.UUIDs;
 import com.datastax.driver.mapping.Result;
+import com.fasterxml.uuid.Generators;
 
 import ie.gmit.socializer.SocializerAPI.database.CassandraConnector;
 import ie.gmit.socializer.SocializerAPI.models.Timeline;
@@ -40,12 +40,12 @@ public class TimelineService {
 	//Add a new timeline post
 	public Timeline createTimelinePost(Timeline newTimeline, UUID user_uuid){
             newTimeline.setUser_uuid(user_uuid);
-            newTimeline.setPost_uuid(UUIDs.random());//Give the post an id
             newTimeline.setLike_count(0);
             newTimeline.setUnlike_count(0);
-            newTimeline.setCreated(new Date());
+            UUID date_TimeUuid = Generators.timeBasedGenerator().generate();
+            newTimeline.setCreated(date_TimeUuid);
             newTimeline.setUpdated(new Date());
-            UUID postId = newTimeline.getPost_uuid();//get the newly create post id
+            UUID postId = newTimeline.getCreated();//get the newly create post id
             boolean created = timelineMapper.createEntry(newTimeline);
                 
             //if new post was created successfully
@@ -58,8 +58,8 @@ public class TimelineService {
 	}
 	
 	//Get a specific timeline post if needed
-	public Timeline getTimelinePost(UUID post_uuid){
-            return timelineMapper.getEntry(post_uuid);
+	public Timeline getTimelinePost(UUID created){
+            return timelineMapper.getEntryUsingFiltering(created);
 	}
 	
 	//Get first 20 timeline posts related to the same user...used on user profile timeline
@@ -67,7 +67,7 @@ public class TimelineService {
             Session session = timelineMapper.getCurrentSession();
 		
             PreparedStatement prepared = session.prepare(
-            String.format("select * from %s.timeline where user_uuid = ? Limit 20", KEY_SPACE)
+            String.format("select * from %s.timeline_bak where user_uuid = ? Limit 20", KEY_SPACE)
             );
 		
             BoundStatement bound = prepared.bind(user_uuid);
@@ -81,7 +81,7 @@ public class TimelineService {
             Session session = timelineMapper.getCurrentSession();
 		
             PreparedStatement prepared = session.prepare(
-            String.format("select * from %s.timeline where user_uuid = ?", KEY_SPACE)
+            String.format("select * from %s.timeline_bak where user_uuid = ?", KEY_SPACE)
             );
 		
             BoundStatement bound = prepared.bind(UUID.fromString(tp.getUser_uuid()));
@@ -104,7 +104,6 @@ public class TimelineService {
             return returnedPosts;
         }
         
-        //THIS CODE WOULD WORK IF USER_UUID WAS A PK OF THE TIMELINE TABLE....DB STRUCTURE MAY HAVE TO BE CHANGED (WILL NEED TESTING)
         //Get next 20 timeline posts related to the user and all the users connections...used on dashboard timeline when user scrolls to bottom
         public List<Timeline> getSectionMultipleUserTimelinePosts(TimelinePagination tp){
             
@@ -115,13 +114,9 @@ public class TimelineService {
             
             String userIds = currentUserFriendList.toString();
             userIds = userIds.substring(1, userIds.length()-1);
-            //String tester = "7c3764d8-84da-4587-87f8-1e638edc8e63";
-               
-            //System.out.println("IDS  "+userIds);
-            String query = "select * from app_user_data.timeline where user_uuid in ("+userIds+") Limit 20 Allow Filtering";
+         
+            String query = "select * from app_user_data.timeline_bak where user_uuid in ("+userIds+") Allow Filtering";
                 
-            //BoundStatement bound = prepared.bind(currentUserFriendList.toArray());
-            //Result<Timeline> results = timelineMapper.getMultiple(bound);
             ResultSet results = session.execute(query);
             Result<Timeline> tl = timelineMapper.getStarterDashboard(results);
             
@@ -142,27 +137,18 @@ public class TimelineService {
             return returnedPosts;
         }
         
-        //THIS CODE WOULD WORK IF USER_UUID WAS A PK OF THE TIMELINE TABLE....DB STRUCTURE MAY HAVE TO BE CHANGED (WILL NEED TESTING)
         //Get first 20 timeline posts related to the user and all the users connections...used on dashboard timeline
 	public Result<Timeline> getMultipleUserTimelinePosts(UUID user_uuid){
             Session session = timelineMapper.getCurrentSession();
             User currentUser = uService.checkIfUserExists(user_uuid);
             List<UUID> currentUserFriendList = currentUser.getConnections();
             currentUserFriendList.add(user_uuid);//Add his/herself to the list because trying to get first 20 posts including current user
-		
-            //PreparedStatement prepared = session.prepare(
-            //String.format("select * from %s.timeline where user_uuid in ? Limit 20 Allow Filtering", KEY_SPACE)
-            //);
         
             String userIds = currentUserFriendList.toString();
             userIds = userIds.substring(1, userIds.length()-1);
-            //String tester = "7c3764d8-84da-4587-87f8-1e638edc8e63";
-               
-            //System.out.println("IDS  "+userIds);
-            String query = "select * from app_user_data.timeline where user_uuid in ("+userIds+") Limit 20 Allow Filtering";
-                
-            //BoundStatement bound = prepared.bind(currentUserFriendList.toArray());
-            //Result<Timeline> results = timelineMapper.getMultiple(bound);
+          
+            String query = "select * from app_user_data.timeline_bak where user_uuid in ("+userIds+") Limit 20 Allow Filtering";
+            
             ResultSet results = session.execute(query);
             Result<Timeline> tl = timelineMapper.getStarterDashboard(results);
                     
@@ -170,9 +156,9 @@ public class TimelineService {
 	}
         
         //Add additional like to a post
-        public int addPostLike(UUID post_uuid){
+        public int addPostLike(UUID created){
             
-            Timeline foundPost = timelineMapper.getEntry(post_uuid);
+            Timeline foundPost = timelineMapper.getEntryUsingFiltering(created);
             
             if(foundPost != null){
                 
@@ -188,9 +174,9 @@ public class TimelineService {
         }
         
         //Add additional like to a post
-        public int addPostUnlike(UUID post_uuid){
+        public int addPostUnlike(UUID created){
             
-            Timeline foundPost = timelineMapper.getEntry(post_uuid);
+            Timeline foundPost = timelineMapper.getEntryUsingFiltering(created);
             
             if(foundPost != null){
                 
@@ -218,12 +204,13 @@ public class TimelineService {
 	}
 	
 	//Delete a timeline post
-	public boolean deleteTimelinePost(UUID post_uuid){
+	public boolean deleteTimelinePost(UUID created, UUID user){
             try{
-                    timelineMapper.deleteEntryAsync(post_uuid);
+                    timelineMapper.deleteTimelineEntry(created, user);
                     return true;
             }catch(Exception e){
                     Logger.getLogger(TimelineService.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - timeline", e.getMessage());
+                    System.out.println("Problem: " +e.getMessage());
             }
 			
             return false;

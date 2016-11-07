@@ -14,6 +14,10 @@ public class TimelinePagination {
     private String user_uuid;
     private int currentTimelineEnd;
     
+    public TimelinePagination(){
+        
+    }
+    
     public TimelinePagination(String user_uuid, int currentTimelineEnd){
        
         this.user_uuid = user_uuid;

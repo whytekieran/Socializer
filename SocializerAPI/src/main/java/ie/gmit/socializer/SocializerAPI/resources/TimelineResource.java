@@ -152,8 +152,7 @@ public class TimelineResource {
                                 .header("Content-Type", "text/plain")
                                 .build(); 
         }
-        
-        //MAY HAVE TO CHANGE DB STRUCTURE SLIGHTLY FOR THIS CODE TO WORK, OTHERWISE ITS FINE
+       
         //RETRIEVING TIMELINE POSTS FOR USER AND ALL THEIR CONNECTIONS, USED ON DASHBOARD PAGE (FIRST 20 OR LESS POSTS)
         @GET
 	@Path("/getStarterDashboardTimeline/{user_uuid}")
@@ -211,7 +210,9 @@ public class TimelineResource {
         //RETRIEVING NEXT 20 TIMELINE POSTS ON USER PROFILE PAGE, PAGINATION
         @POST
         @Path("/getNextProfileTimeline")
-        public Response getSectionProfileTimeline(TimelinePagination tp){
+        @Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+        public Response getSectionProfileTimeline(TimelinePagination tp, @HeaderParam("Content-Type") String contentTypeValue){
             
             TimelineResponse successResponse;
             ResponseWithMessage failResponse;
@@ -227,7 +228,7 @@ public class TimelineResource {
                     
                     return Response.status(Response.Status.OK)
                                 .entity(jsonResponseString)
-				.header("Content-Type", "application/json")
+				.header("Content-Type", contentTypeValue)
 				.build();
                 } 
                 catch (JsonProcessingException e1) {
@@ -244,7 +245,7 @@ public class TimelineResource {
                     
                     return Response.status(Response.Status.OK)
                                 .entity(jsonResponseString)
-				.header("Content-Type", "application/json")
+				.header("Content-Type", contentTypeValue)
 				.build();
                 } 
                 catch (JsonProcessingException e1) {
@@ -261,7 +262,9 @@ public class TimelineResource {
         
         //RETRIEVING NEXT 20 TIMELINE POSTS ON USER DASHBOARD PAGE, PAGINATION
         @POST
-        @Path("/getNextProfileTimeline")
+        @Path("/getNextDashboardTimeline")
+        @Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
         public Response getSectionDashboardTimeline(TimelinePagination tp){
             
             TimelineResponse successResponse;
@@ -314,11 +317,11 @@ public class TimelineResource {
         @POST
 	@Path("/newLike")
 	@Produces(MediaType.APPLICATION_JSON)
-        public Response addALike(@HeaderParam("Post-Id") UUID post_uuid){
+        public Response addALike(@HeaderParam("Created-Id") UUID created_uuid){
             
             LikeResponse successResponse;
             ResponseWithMessage failResponse;
-            int result = tService.addPostLike(post_uuid);
+            int result = tService.addPostLike(created_uuid);
             
             if(result != -1){
                 try {
@@ -363,11 +366,11 @@ public class TimelineResource {
         @POST
 	@Path("/newUnlike")
 	@Produces(MediaType.APPLICATION_JSON)
-        public Response addAnUnlike(@HeaderParam("Post-Id") UUID post_uuid){
+        public Response addAnUnlike(@HeaderParam("Created-Id") UUID created_uuid){
             
             LikeResponse successResponse;
             ResponseWithMessage failResponse;
-            int result = tService.addPostUnlike(post_uuid);
+            int result = tService.addPostUnlike(created_uuid);
             
             if(result != -1){
                 try {
@@ -410,23 +413,22 @@ public class TimelineResource {
         
         //UPDATING A TIMELINE POST
         @PUT
-	@Path("/update/{user_uuid}")
+	@Path("/update/{created_uuid}")
 	@Produces(MediaType.APPLICATION_JSON)
         @Consumes(MediaType.APPLICATION_JSON)
-        public Response updateUser(Timeline updatePost, @PathParam("post_uuid") UUID post_id, 
+        public Response updatePost(Timeline updatePost, @PathParam("created_uuid") UUID created_id, 
                 @HeaderParam("Content-Type") String contentTypeValue){
             
             ResponseWithMessage rwm;
             IdResponse ir;
-            Timeline foundPost = tService.getTimelinePost(post_id);
+            Timeline foundPost = tService.getTimelinePost(created_id);
             
             if(foundPost != null){
                 //This data needs to be maintained, we dont want it being overriden during an update
-                UUID post_uuid = post_id;
+                UUID created_uuid = created_id;
                 UUID user_uuid = foundPost.getUser_uuid();
                 UUID album_uuid = foundPost.getAlbum_uuid();
                 UUID parent_uuid = foundPost.getParrent_uuid();
-                Date created = foundPost.getCreated();
                 int likes = foundPost.getLike_count();
                 int unlikes = foundPost.getUnlike_count();
                 //Now we can make the old post equal to the new post
@@ -435,9 +437,8 @@ public class TimelineResource {
                 foundPost.setAlbum_uuid(album_uuid);
                 foundPost.setLike_count(likes);
                 foundPost.setUnlike_count(unlikes);
-                foundPost.setPost_uuid(post_uuid);
                 foundPost.setUser_uuid(user_uuid);
-                foundPost.setCreated(created);
+                foundPost.setCreated(created_uuid);
                 foundPost.setParrent_uuid(parent_uuid);
                 //Lastly the timeline was updated so...
                 foundPost.setUpdated(new Date());
@@ -445,7 +446,7 @@ public class TimelineResource {
                 boolean updated = tService.updateTimeline(foundPost);//Update the post and get back the result.
                 
                 if(updated){
-                            ir = new IdResponse("true", post_uuid);
+                            ir = new IdResponse("true", created_uuid);
                             
                             try {
                                 jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ir);
@@ -493,15 +494,15 @@ public class TimelineResource {
         
         //DELETING A TIMELINE POST
         @DELETE
-	@Path("/delete/{post_uuid}")
+	@Path("/delete/{created_uuid}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteUser(@PathParam("post_uuid") UUID post_uuid){
+	public Response deleteUser(@PathParam("created_uuid") UUID created_uuid, @HeaderParam("User-Id") UUID user_uuid){
             
             IdResponse ir;
-            boolean deleted = tService.deleteTimelinePost(post_uuid);
+            boolean deleted = tService.deleteTimelinePost(created_uuid, user_uuid);
                 
             if(deleted){
-                ir = new IdResponse("true", post_uuid);
+                ir = new IdResponse("true", created_uuid);
                         
                 try {
                     jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ir);
@@ -516,7 +517,7 @@ public class TimelineResource {
             }
             else
             {
-                ir = new IdResponse("false", post_uuid);
+                ir = new IdResponse("false", created_uuid);
                  
                 try {
                          jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ir);

@@ -9,14 +9,13 @@ import com.datastax.driver.mapping.annotations.Table;
 
 //User class written by Ciaran Whyte
 //Defines this as a Cassandra "Table"
-@Table(keyspace = "app_user_data", name = "timeline",
+@Table(keyspace = "app_user_data", name = "timeline_bak",
 caseSensitiveKeyspace = false,
 caseSensitiveTable = false)
 public class Timeline {
 		
 	//Instance variables
 	@PartitionKey(0)
-	private UUID post_uuid;
 	private UUID user_uuid;
 	private UUID album_uuid;
 	private UUID parrent_uuid;
@@ -26,22 +25,13 @@ public class Timeline {
 	private int unlike_count;
 	private String visibility;
 	@ClusteringColumn
-	private Date created;
+	private UUID created;
 	private Date updated;
 	
 	//Empty constructor needed for the jersey framework.
 	public Timeline()
 	{
 		
-	}
-
-	//Getters and Setters
-	public UUID getPost_uuid() {
-		return post_uuid;
-	}
-
-	public void setPost_uuid(UUID post_uuid) {
-		this.post_uuid = post_uuid;
 	}
 
 	public UUID getUser_uuid() {
@@ -108,14 +98,6 @@ public class Timeline {
 		this.visibility = visibility;
 	}
 
-	public Date getCreated() {
-		return created;
-	}
-
-	public void setCreated(Date created) {
-		this.created = created;
-	}
-
 	public Date getUpdated() {
 		return updated;
 	}
@@ -123,4 +105,12 @@ public class Timeline {
 	public void setUpdated(Date updated) {
 		this.updated = updated;
 	}
+
+        public UUID getCreated() {
+            return created;
+        }
+        
+        public void setCreated(UUID created) {
+            this.created = created;
+        }
 }

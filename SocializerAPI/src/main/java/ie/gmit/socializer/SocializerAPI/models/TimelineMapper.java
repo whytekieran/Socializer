@@ -50,6 +50,7 @@ public class TimelineMapper implements Mappable<Timeline> {
         } catch (Exception e) {
             //If there is a problem use the java.util logger to keep a log of the issue. - No connection
             Logger.getLogger(TimelineMapper.class.getName()).log(Level.SEVERE, "Could not create cassandra entry - timeline", e.getMessage());
+            System.out.println(e.getMessage());
         }
 
         return false;	//If we reach this point of the method return false
@@ -66,17 +67,32 @@ public class TimelineMapper implements Mappable<Timeline> {
     //as a BoundStatement. In this case the BoundStatement is for deleting timeline posts.//allow filtering
     public BoundStatement getDeleteBoundStatement(UUID entryUUID) {
             PreparedStatement prepared = session.prepare(
-            String.format("delete from %s.timeline where post_uuid = ?", KEY_SPACE)
+            String.format("delete from %s.timeline_bak where created = ? allow filtering", KEY_SPACE)
         );
 		
             return prepared.bind(entryUUID);//Here we bind the statement to the variable then return it
     }
-
+    
     @Override
     //Synchronous
     public boolean deleteEntry(UUID entryUUID) {
 	try {
             session.execute(getDeleteBoundStatement(entryUUID));
+            return true;
+        } catch (Exception e) {
+            //This is only possible if there is no connection
+            Logger.getLogger(TimelineMapper.class.getName()).log(Level.SEVERE, "Could not execute cassandra delete - timeline", e.getMessage());
+        }
+		
+            return false;
+    }
+    
+
+    //Synchronous
+    public boolean deleteTimelineEntry(UUID entryUUID, UUID user) {
+	try {
+            String qry = "delete from app_user_data.timeline_bak where created = "+entryUUID+" and user_uuid = "+user;
+            session.execute(qry);
             return true;
         } catch (Exception e) {
             //This is only possible if there is no connection
@@ -106,7 +122,7 @@ public class TimelineMapper implements Mappable<Timeline> {
     public boolean deleteEntries(List<UUID> entryUUIDs, String keyColumnName) {
 	//Prepare statement with string formatter 
 	PreparedStatement prepared = session.prepare(
-		String.format("delete from %s.timeline where %s in ?", KEY_SPACE, keyColumnName)
+		String.format("delete from %s.timeline_bak where %s in ?", KEY_SPACE, keyColumnName)
 	);
 	//Bind variable (?) to parameter using .bind()
 	BoundStatement bound = prepared.bind(entryUUIDs);
@@ -145,7 +161,21 @@ public class TimelineMapper implements Mappable<Timeline> {
     //Get a particular timeline entry
     public Timeline getEntry(UUID entryUUID) {
 	PreparedStatement prepared = session.prepare(
-        String.format("select * from %s.timeline where post_uuid = ?", KEY_SPACE)
+        String.format("select * from %s.timeline_bak where created = ?", KEY_SPACE)
+        );
+        
+	BoundStatement bound = prepared.bind(entryUUID);
+        ResultSet results = session.execute(bound);
+
+        //gets the next one...but all uuids for posts are unique hence there will only be one post here 
+        //to return because query above is based on post_uuid
+        return mapper.map(results).one();
+    }
+    
+    //Get a particular timeline entry
+    public Timeline getEntryUsingFiltering(UUID entryUUID) {
+	PreparedStatement prepared = session.prepare(
+        String.format("select * from %s.timeline_bak where created = ? allow filtering", KEY_SPACE)
         );
         
 	BoundStatement bound = prepared.bind(entryUUID);
