@@ -38,10 +38,16 @@ public class TimelineService {
 	}
 	
 	//Add a new timeline post
-	public Timeline createTimelinePost(Timeline newTimeline, UUID user_uuid){
+	public Timeline createTimelinePost(Timeline newTimeline, UUID user_uuid, String parent_uuid){
             newTimeline.setUser_uuid(user_uuid);
             newTimeline.setLike_count(0);
             newTimeline.setUnlike_count(0);
+            
+            //If the parent uuid is not null it means this post has a parent (its a comment on another post) so.....
+            if(!parent_uuid.equalsIgnoreCase("null")){
+                newTimeline.setParrent_uuid(UUID.fromString(parent_uuid));//Convert id from string to uuid then add it as parent id.
+            }
+            
             UUID date_TimeUuid = Generators.timeBasedGenerator().generate();
             newTimeline.setCreated(date_TimeUuid);
             newTimeline.setUpdated(new Date());
@@ -75,6 +81,20 @@ public class TimelineService {
 		
             return results;
 	}
+        
+        public Result<Timeline> getPostsComments(UUID parrent_uuid){
+            Session session = timelineMapper.getCurrentSession();
+		
+            System.out.println("ID: d "+parrent_uuid);
+            PreparedStatement prepared = session.prepare(
+            String.format("select * from %s.timeline_bak where parrent_uuid = ?", KEY_SPACE)
+            );
+		
+            BoundStatement bound = prepared.bind(parrent_uuid);
+            Result<Timeline> results = timelineMapper.getMultiple(bound);
+		
+            return results;
+        }
         
         //Gets next 20 posts for a particular user profile timeline when the user scrolls to the bottom of the page
         public List<Timeline> getSectionUserTimelinePosts(TimelinePagination tp){

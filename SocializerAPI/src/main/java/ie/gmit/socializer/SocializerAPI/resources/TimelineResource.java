@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ie.gmit.socializer.SocializerAPI.models.Timeline;
 import ie.gmit.socializer.SocializerAPI.models.TimelinePagination;
+import ie.gmit.socializer.SocializerAPI.responseObjects.CommentResponse;
 import ie.gmit.socializer.SocializerAPI.responseObjects.IdResponse;
 import ie.gmit.socializer.SocializerAPI.responseObjects.LikeResponse;
 import ie.gmit.socializer.SocializerAPI.responseObjects.NewTimelinePostResponse;
@@ -44,11 +45,12 @@ public class TimelineResource {
 	@Path("/new")
         public Response createTimelinePost(Timeline newTimelinePost, 
                 @HeaderParam("Content-Type") String contentTypeValue,
-                @HeaderParam("User-Id") UUID user_uuid){
+                @HeaderParam("User-Id") UUID user_uuid,
+                @HeaderParam("Parent-Id") String parent_uuid){
             
             NewTimelinePostResponse successResponse;
             ResponseWithMessage failResponse;
-            Timeline newPost = tService.createTimelinePost(newTimelinePost, user_uuid);
+            Timeline newPost = tService.createTimelinePost(newTimelinePost, user_uuid, parent_uuid);
             
             if(newPost != null){
                 try 
@@ -152,6 +154,61 @@ public class TimelineResource {
                                 .header("Content-Type", "text/plain")
                                 .build(); 
         }
+        
+        //RETRIEVING COMMENTS FOR A PARTICULAR TIMELINE POST
+        @GET
+	@Path("/getComments/{parrent_uuid}")
+	@Produces(MediaType.APPLICATION_JSON)
+        public Response getComments(@PathParam("parrent_uuid") UUID parrent_uuid){
+            
+            CommentResponse successResponse;
+            ResponseWithMessage failResponse;
+            Result<Timeline> results = tService.getPostsComments(parrent_uuid);
+            List<Timeline> commentPostList = results.all();    //Convert to list of timeline objects. (Posts)
+            
+            if(commentPostList.isEmpty() != true){
+                
+                try {
+                    
+                    //Object with success of true, the timeline list and the start/end records retrieved from the timeline
+                    successResponse = new CommentResponse("true", commentPostList);
+                    jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(successResponse);//object to json convert
+                    
+                    return Response.status(Response.Status.OK)
+                                .entity(jsonResponseString)
+				.header("Content-Type", "application/json")
+				.build();
+                } 
+                catch (JsonProcessingException e1) {
+                     System.out.println(e1.getMessage());
+                }
+                
+            }
+            else{
+                try {
+                    
+                    //Object with success of true, the timeline list and the start/end records retrieved from the timeline
+                    failResponse = new ResponseWithMessage("false", "No comments for this post yet");
+                    jsonResponseString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(failResponse);//object to json convert
+                    
+                    return Response.status(Response.Status.OK)
+                                .entity(jsonResponseString)
+				.header("Content-Type", "application/json")
+				.build();
+                } 
+                catch (JsonProcessingException e1) {
+                     System.out.println(e1.getMessage());
+                }
+            }
+           
+           
+            //Default if everything goes wrong
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                .entity("Something went wrong")
+                                .header("Content-Type", "text/plain")
+                                .build(); 
+        }
+        
        
         //RETRIEVING TIMELINE POSTS FOR USER AND ALL THEIR CONNECTIONS, USED ON DASHBOARD PAGE (FIRST 20 OR LESS POSTS)
         @GET
