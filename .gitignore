@@ -91,3 +91,13 @@ manifest.mf
 nb*
 
 /Services/chat-server/target/
+
+# Vs code
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Ingore node modules
+node_modules/
