@@ -9,19 +9,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var core_1 = require('@angular/core');
-var AppComponent = (function () {
-    function AppComponent() {
-        this.title = 'Socializer';
+var IndexComponent = (function () {
+    function IndexComponent() {
     }
-    AppComponent = __decorate([
+    IndexComponent.prototype.ngOnInit = function () {
+    };
+    IndexComponent = __decorate([
         core_1.Component({
-            selector: 'core-app',
-            templateUrl: '/app/app.component.html',
-            styleUrls: ['/app/app.component.css']
+            selector: 'app-index',
+            templateUrl: 'app/index/index.component.html',
+            styleUrls: ['app/index/index.component.css']
         }), 
         __metadata('design:paramtypes', [])
-    ], AppComponent);
-    return AppComponent;
+    ], IndexComponent);
+    return IndexComponent;
 }());
-exports.AppComponent = AppComponent;
-//# sourceMappingURL=app.component.js.map
+exports.IndexComponent = IndexComponent;
+//# sourceMappingURL=index.component.js.map

@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
 
 @Component({
-    selector: 'ws-chat-app',
-    template: `
-    <alert type="info">App component is loaded</alert>
-  `,
+    selector: 'core-app',
+    templateUrl: '/app/app.component.html',
+    styleUrls: ['/app/app.component.css']
 })
 
-export class AppComponent {
-    title = 'WS chat application';
+export class AppComponent{
+    title = 'Socializer';
 }
