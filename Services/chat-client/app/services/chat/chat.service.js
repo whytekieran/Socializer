@@ -9,26 +9,22 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var core_1 = require('@angular/core');
-var router_1 = require('@angular/router');
-var AppComponent = (function () {
-    function AppComponent(router) {
-        this.router = router;
-        this.title = 'Socializer';
-        this.location = '';
-        this.location = router.url;
+var websocket_service_1 = require('./websocket.service');
+var CHAT_URL = 'ws://localhost:8081';
+var ChatService = (function () {
+    function ChatService(wsService) {
+        this.messages = wsService
+            .connect(CHAT_URL)
+            .map(function (response) {
+            var data = JSON.parse(response.data);
+            return data;
+        });
     }
-    AppComponent.prototype.isActivePath = function (activePath) {
-        return location.pathname == activePath;
-    };
-    AppComponent = __decorate([
-        core_1.Component({
-            selector: 'core-app',
-            templateUrl: '/app/app.component.html',
-            styleUrls: ['/app/app.component.css']
-        }), 
-        __metadata('design:paramtypes', [router_1.Router])
-    ], AppComponent);
-    return AppComponent;
+    ChatService = __decorate([
+        core_1.Injectable(), 
+        __metadata('design:paramtypes', [websocket_service_1.WebSocketService])
+    ], ChatService);
+    return ChatService;
 }());
-exports.AppComponent = AppComponent;
-//# sourceMappingURL=app.component.js.map
+exports.ChatService = ChatService;
+//# sourceMappingURL=chat.service.js.map

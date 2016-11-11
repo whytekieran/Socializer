@@ -9,26 +9,28 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var core_1 = require('@angular/core');
-var router_1 = require('@angular/router');
-var AppComponent = (function () {
-    function AppComponent(router) {
-        this.router = router;
-        this.title = 'Socializer';
-        this.location = '';
-        this.location = router.url;
+var chat_service_1 = require('./../services/chat/chat.service');
+var ChatComponent = (function () {
+    function ChatComponent(chatService) {
+        this.chatService = chatService;
+        this.messages = [];
     }
-    AppComponent.prototype.isActivePath = function (activePath) {
-        return location.pathname == activePath;
+    ChatComponent.prototype.ngOnInit = function () {
+        var _this = this;
+        this.chatService.messages.subscribe(function (msg) {
+            _this.messages.push(msg);
+        });
     };
-    AppComponent = __decorate([
+    ChatComponent = __decorate([
         core_1.Component({
-            selector: 'core-app',
-            templateUrl: '/app/app.component.html',
-            styleUrls: ['/app/app.component.css']
+            moduleId: module.id,
+            selector: 'app-chat',
+            templateUrl: './chat.component.html',
+            styleUrls: ['./chat.component.css']
         }), 
-        __metadata('design:paramtypes', [router_1.Router])
-    ], AppComponent);
-    return AppComponent;
+        __metadata('design:paramtypes', [chat_service_1.ChatService])
+    ], ChatComponent);
+    return ChatComponent;
 }());
-exports.AppComponent = AppComponent;
-//# sourceMappingURL=app.component.js.map
+exports.ChatComponent = ChatComponent;
+//# sourceMappingURL=chat.component.js.map

@@ -4,11 +4,14 @@ import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { Ng2BootstrapModule } from 'ng2-bootstrap/ng2-bootstrap';
 
-import { AppComponent }       from './app.component';
+import { AppComponent } from './app.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { IndexComponent }     from './index/index.component';
+import { IndexComponent } from './index/index.component';
+import { ChatComponent } from './chat/chat.component';
 
-import { AppRoutingModule }     from './routing/app-routing.module';
+import { AppRoutingModule } from './routing/app-routing.module';
+
+import { ChatService } from './services/chat/chat.service';
 
 @NgModule({
     imports: [
@@ -21,9 +24,10 @@ import { AppRoutingModule }     from './routing/app-routing.module';
         AppComponent,
         IndexComponent,
         DashboardComponent,
+        ChatComponent
     ],
     providers: [
-        
+        ChatService
     ],
     bootstrap: [AppComponent]
 })

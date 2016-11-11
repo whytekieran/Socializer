@@ -15,7 +15,9 @@ var ng2_bootstrap_1 = require('ng2-bootstrap/ng2-bootstrap');
 var app_component_1 = require('./app.component');
 var dashboard_component_1 = require('./dashboard/dashboard.component');
 var index_component_1 = require('./index/index.component');
+var chat_component_1 = require('./chat/chat.component');
 var app_routing_module_1 = require('./routing/app-routing.module');
+var chat_service_1 = require('./services/chat/chat.service');
 var AppModule = (function () {
     function AppModule() {
     }
@@ -31,8 +33,11 @@ var AppModule = (function () {
                 app_component_1.AppComponent,
                 index_component_1.IndexComponent,
                 dashboard_component_1.DashboardComponent,
+                chat_component_1.ChatComponent
             ],
-            providers: [],
+            providers: [
+                chat_service_1.ChatService
+            ],
             bootstrap: [app_component_1.AppComponent]
         }), 
         __metadata('design:paramtypes', [])

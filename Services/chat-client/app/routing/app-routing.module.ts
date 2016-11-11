@@ -5,7 +5,7 @@ import { DashboardComponent } from './../dashboard/dashboard.component';
 
 const routes: Routes = [
     //Redirect to dashboard for testing purposes only
-    { path: '', redirectTo: '/login', pathMatch: 'full' },
+    { path: '', redirectTo: '/login', pathMatch: 'full'},
     { path: 'dashboard', component: DashboardComponent },
     { path: 'login', component: IndexComponent}
 ];

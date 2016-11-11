@@ -9,26 +9,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var core_1 = require('@angular/core');
-var router_1 = require('@angular/router');
-var AppComponent = (function () {
-    function AppComponent(router) {
-        this.router = router;
-        this.title = 'Socializer';
-        this.location = '';
-        this.location = router.url;
+var common_1 = require('@angular/common');
+var chat_component_1 = require('./chat.component');
+var ChatModule = (function () {
+    function ChatModule() {
     }
-    AppComponent.prototype.isActivePath = function (activePath) {
-        return location.pathname == activePath;
-    };
-    AppComponent = __decorate([
-        core_1.Component({
-            selector: 'core-app',
-            templateUrl: '/app/app.component.html',
-            styleUrls: ['/app/app.component.css']
+    ChatModule = __decorate([
+        core_1.NgModule({
+            imports: [
+                common_1.CommonModule
+            ],
+            declarations: [chat_component_1.ChatComponent]
         }), 
-        __metadata('design:paramtypes', [router_1.Router])
-    ], AppComponent);
-    return AppComponent;
+        __metadata('design:paramtypes', [])
+    ], ChatModule);
+    return ChatModule;
 }());
-exports.AppComponent = AppComponent;
-//# sourceMappingURL=app.component.js.map
+exports.ChatModule = ChatModule;
+//# sourceMappingURL=chat.module.js.map

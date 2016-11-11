@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'core-app',
@@ -8,4 +9,15 @@ import { Component } from '@angular/core';
 
 export class AppComponent{
     title = 'Socializer';
+    public location = '';
+    
+    constructor(
+        private router: Router
+    ){
+        this.location = router.url;
+    }
+
+    isActivePath(activePath: string): boolean{
+        return location.pathname == activePath;
+    }
 }
